@@ -1,0 +1,8 @@
+#LOG files
+*.log
+
+#PYTHON
+*.pyc
+
+#CSV files
+*.csv

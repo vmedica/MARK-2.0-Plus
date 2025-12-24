@@ -1,4 +1,5 @@
 ProjectName,Is_Real_ML_producer,Is_ML_producer
+agusgun/FakeImageDetector,Yes,No
 ai-med/nn-common-modules,Yes,No
 akanimax/BMSG-GAN,Yes,No
 AliaksandrSiarohin/monkey-net,Yes,No
