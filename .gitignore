@@ -1,0 +1,19 @@
+# ambiente e cache
+venv
+.venv
+.vscode
+__pycache__
+
+# logs terminale
+logs
+
+# file di output
+output
+
+# log del cloner
+modules/cloner/log
+
+# risultati oracle matching
+modules/oracle/verifying
+modules/oracle/matching/result_consumer_*.csv
+modules/oracle/matching/result_producer_*.csv
