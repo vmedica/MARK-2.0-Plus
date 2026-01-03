@@ -1,5 +1,7 @@
 """Black-box system testing for MARK 2.0 analysis function using CLI interface."""
 
+"""Running with the command: pytest .\analysis_test.py -v """
+
 import subprocess
 import sys
 from pathlib import Path
@@ -125,11 +127,15 @@ class TestAnalysisBlackBox:
             analysis=True,
         )
 
+        # (return 0 of the main) returncode != 0 indicates a command error or failure.
         assert (
             result.returncode != 0
         ), f"Expected non-zero return code, got {result.returncode}"
 
+        # Prepare error output by converting it to lowercase
         error_output = result.stderr.lower()
+        
+        # Check: if the command error message contains the specific string then the test passes
         assert any(
             err in error_output
             for err in [
@@ -174,6 +180,12 @@ class TestAnalysisBlackBox:
             analysis=True,
         )
 
+        """Verifies that the exit code is exactly 0, which means the CLI command 
+        (main_args.py --analysis True --io-path ... --repository-path ...) 
+        completed without errors. 
+        If the assertion fails, an AssertionError exception is raised with 
+        a message that includes the standard error output (stderr) of the 
+        failed process."""
         assert result.returncode == 0, f"Execution failed: {result.stderr}"
 
         producers = get_classified_projects(io_structure, "producer")

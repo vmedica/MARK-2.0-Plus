@@ -1,5 +1,6 @@
 """Black-box system testing for MARK 2.0 repository cloning using CLI interface."""
 
+"""Running with the command: pytest .\cloning_test.py -v """
 import subprocess
 import sys
 from pathlib import Path
