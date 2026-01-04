@@ -12,6 +12,7 @@ from modules.utils.logger import get_logger
 from modules.analyzer.analyzer_factory import AnalyzerFactory #required import
 from modules.analyzer.builder.consumer_analyzer_builder import ConsumerAnalyzerBuilder #required import
 from modules.analyzer.builder.producer_analyzer_builder import ProducerAnalyzerBuilder #required import
+from modules.metrics.code_metrics import CodeMetrics
 
 logger = get_logger(__name__)
 
@@ -28,6 +29,7 @@ N_REPOS = 50
 CLONER = True
 CLONER_CHECK = True
 ANALYSIS = True
+METRICS = True
 MERGER = True
 RESULT_ANALYSIS = True
 
@@ -70,6 +72,14 @@ def main() -> None:
             role=AnalyzerRole.CONSUMER
         )
         dir_consumer = consumer_facade.run_analysis(rules_3=True)
+
+    # === CALCULATE AND SAVE METRICS ===
+    if METRICS:
+        logger.info("*** INIZIO CALCOLO METRICHE CC E MI ***")
+        
+        metrics = CodeMetrics(projects_path=str(REPOSITORY_PATH))
+        metrics.analyze_all_projects()
+        metrics.save_csv(output_base_folder=str(OUTPUT_PATH))
 
     # === MERGE DEI RISULTATI ===
     if MERGER:
