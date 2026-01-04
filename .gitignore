@@ -6,3 +6,6 @@
 
 #CSV files
 *.csv
+
+#FOLDERS
+io/repos/
