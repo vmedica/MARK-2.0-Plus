@@ -23,15 +23,15 @@ PROJECT_LIST_PATH = IO_PATH / "applied_projects.csv"
 REPOSITORY_PATH = IO_PATH / "repos"
 ANALYZER_PATH = Path("./modules/analyzer")
 ORACLE_PATH = Path("./modules/oracle")
-N_REPOS = 50
+N_REPOS = 5
 
 # Steps
-CLONER = True
-CLONER_CHECK = True
+CLONER = False
+CLONER_CHECK = False
 ANALYSIS = True
 METRICS = True
-MERGER = True
-RESULT_ANALYSIS = True
+MERGER = False
+RESULT_ANALYSIS = False
 
 
 def main() -> None:
@@ -79,7 +79,7 @@ def main() -> None:
         
         metrics = CodeMetrics(projects_path=str(REPOSITORY_PATH))
         metrics.analyze_all_projects()
-        metrics.save_csv(output_base_folder=str(OUTPUT_PATH))
+        metrics.save_csv(base_output_folder=str(OUTPUT_PATH))
 
     # === MERGE DEI RISULTATI ===
     if MERGER:

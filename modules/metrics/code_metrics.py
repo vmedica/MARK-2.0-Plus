@@ -37,7 +37,7 @@ class CodeMetrics:
 
         # MI
         try:
-            mi_score = mi_visit(code, True)
+            mi_score = mi_visit(code, False)
         except Exception as e:
             logger.warning("Errore MI %s: %s", file_path, e)
             mi_score = 0
@@ -56,6 +56,7 @@ class CodeMetrics:
                 if f.endswith(".py"):
                     cc_val, mi_val, sloc_val = self._calculate_file_metrics(os.path.join(root, f))
                     if sloc_val > 0:
+                        print(f"File: {os.path.join(root, f)} | CC: {cc_val} | MI: {mi_val} | SLOC: {sloc_val}")
                         cc_list.append((cc_val, sloc_val))
                         mi_list.append((mi_val, sloc_val))
                         sloc_list.append(sloc_val)
@@ -77,7 +78,7 @@ class CodeMetrics:
                 continue
             mi_avg, cc_avg = self._calculate_project_metrics(proj_path)
             self.metrics_list.append({
-                "Nome_progetto": proj,
+                "ProjectName": proj,
                 "MI_avg": mi_avg,
                 "CC_avg": cc_avg
             })
@@ -95,9 +96,23 @@ class CodeMetrics:
         metrics_folder = os.path.join(base_output_folder, "metrics")
         os.makedirs(metrics_folder, exist_ok=True)
 
-        csv_file = os.path.join(metrics_folder, "metrics.csv")
+        #Trova il prossimo numero disponibile
+        existing_files = [
+            f for f in os.listdir(metrics_folder)
+            if f.startswith("metrics.csv") and f.split("_")[0].isdigit()
+        ]
+
+        if existing_files:
+            max_index = max(int(f.split("_")[0]) for f in existing_files)
+            next_index = max_index + 1
+        else:
+            next_index = 1
+
+        csv_filename = f"{next_index}_metrics.csv"
+        csv_file = os.path.join(metrics_folder, csv_filename)
+        
         with open(csv_file, 'w', newline='', encoding='utf-8') as f:
-            writer = csv.DictWriter(f, fieldnames=["Nome_progetto", "MI_avg", "CC_avg"])
+            writer = csv.DictWriter(f, fieldnames=["ProjectName", "MI_avg", "CC_avg"])
             writer.writeheader()
             for m in self.metrics_list:
                 writer.writerow(m)
