@@ -1,6 +1,6 @@
-"""Black-box system testing for MARK 2.0 repository cloning using CLI interface."""
+"""Black-box system testing for MARK 2.0 repository cloning using CLI interface.
+Running with the command: pytest -v"""
 
-"""Running with the command: pytest .\cloning_test.py -v """
 import subprocess
 import sys
 from pathlib import Path
@@ -143,7 +143,6 @@ class TestCloningBlackBox:
             io_path=io_structure,
             project_list=nonexistent_csv,
             repository_path=repos_path,
-            n_repos=10,
             clone=True,
         )
 
@@ -152,12 +151,9 @@ class TestCloningBlackBox:
         ), f"Expected non-zero return code for missing CSV, got {result.returncode}"
 
         error_output = result.stderr.lower()
-        assert any(
-            err in error_output
-            for err in [
-                "project list file not found",
-            ]
-        ), f"Expected error about missing CSV file.\nStderr: {result.stderr}"
+        assert (
+            "project list file not found" in error_output
+        ), f"Expected 'project list file not found' error.\nStderr: {result.stderr}"
 
     def test_2_csv_empty(self, project_root, io_structure, test_data_dir):
         """TF2: CSV vuoto (solo header) → Nessun repository clonato."""
@@ -172,7 +168,6 @@ class TestCloningBlackBox:
             io_path=io_structure,
             project_list=empty_csv,
             repository_path=repos_path,
-            n_repos=10,
             clone=True,
         )
 
@@ -207,7 +202,6 @@ class TestCloningBlackBox:
             io_path=io_structure,
             project_list=single_csv,
             repository_path=repos_path,
-            n_repos=1,
             clone=True,
         )
 
@@ -245,7 +239,6 @@ class TestCloningBlackBox:
             io_path=io_structure,
             project_list=multi_csv,
             repository_path=repos_path,
-            n_repos=n_repos,
             clone=True,
         )
 

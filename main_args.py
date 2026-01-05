@@ -97,7 +97,7 @@ def parse_arguments():
         "--no-rules-3",
         action="store_true",
         default=False,
-        help="Disable rules 3 for consumer analysis (rules 3 are enabled by default)",
+        help="Disable rule 3 for consumer analysis (rule 3 is enabled by default)",
     )
 
     args = parser.parse_args()
@@ -117,7 +117,7 @@ def parse_arguments():
     if args.project_list is None:
         args.project_list = args.io_path / "applied_projects.csv"
 
-    # Set rules_3 based on no_rules_3 flag (inverted logic)
+    # Set rule_3 based on no_rule_3 flag (inverted logic)
     args.rules_3 = not args.no_rules_3
 
     return args

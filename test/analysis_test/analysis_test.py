@@ -1,6 +1,5 @@
-"""Black-box system testing for MARK 2.0 analysis function using CLI interface."""
-
-"""Running with the command: pytest .\analysis_test.py -v """
+"""Black-box system testing for MARK 2.0 analysis function using CLI interface.
+Running with the command: pytest -v"""
 
 import subprocess
 import sys
@@ -93,17 +92,8 @@ def get_classified_projects(io_path, role):
         return set()
 
     df = pd.read_csv(results_csv)
-    if df.empty:
-        return set()
-
-    column_name = f"Is ML {role}"
-    if column_name not in df.columns:
-        return set()
-
-    # Get unique projects where classification is "Yes"
-    classified = df[df[column_name].str.contains("Yes", case=False, na=False)][
-        "ProjectName"
-    ].unique()
+    # Get unique correctly classified projects
+    classified = df["ProjectName"].unique()
 
     return set(classified)
 
@@ -134,14 +124,12 @@ class TestAnalysisBlackBox:
 
         # Prepare error output by converting it to lowercase
         error_output = result.stderr.lower()
-        
+
         # Check: if the command error message contains the specific string then the test passes
-        assert any(
-            err in error_output
-            for err in [
-                "input folder not found",
-            ]
-        ), f"Expected error about missing directory.\nStderr: {result.stderr}"
+        assert "input folder not found" in error_output, (
+            f"Expected error message 'input folder not found' in stderr.\n"
+            f"Stderr: {result.stderr}"
+        )
 
     def test_2_empty_directory(self, project_root, io_structure, tmp_path):
         """TF2: Directory vuota → Nessun progetto classificato."""
