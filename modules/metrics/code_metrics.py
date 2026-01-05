@@ -24,16 +24,21 @@ class CodeMetrics:
                 code = f.read()
         except Exception as e:
             logger.warning("Non posso leggere %s: %s", file_path, e)
-            return 0, 0, 0
+            return [], 0, 0  # ritorna lista vuota di blocchi
 
-        # CC
+        # CC — dettagli per blocco
+        cc_blocks = []
         try:
             cc_blocks = cc_visit(code)
-            cc_values = [b.complexity for b in cc_blocks]
-            cc_avg = sum(cc_values) / len(cc_values) if cc_values else 0
+            print(f"\n  Dettaglio CC per file: {file_path}")
+            for b in cc_blocks:
+                print(
+                    f"    Blocco: {b.name} | "
+                    f"Tipo: {b.__class__.__name__} | "
+                    f"CC_blocco: {b.complexity}"
+                )
         except Exception as e:
             logger.warning("Errore CC %s: %s", file_path, e)
-            cc_avg = 0
 
         # MI
         try:
@@ -43,26 +48,51 @@ class CodeMetrics:
             mi_score = 0
 
         # SLOC effettivo
-        sloc = sum(1 for line in code.splitlines() if line.strip() and not line.strip().startswith("#"))
+        sloc = sum(
+            1 for line in code.splitlines()
+            if line.strip() and not line.strip().startswith("#")
+        )
 
-        return cc_avg, mi_score, sloc
+        return cc_blocks, mi_score, sloc
 
     def _calculate_project_metrics(self, project_path: str):
-        """Calcola CC e MI pesati per SLOC per un progetto."""
-        cc_list, mi_list, sloc_list = [], [], []
+        """Calcola CC media (come Radon -a) e MI pesato per progetto."""
+        all_cc_values = []  # lista di tutte le complessità dei blocchi
+        mi_list, sloc_list = [], []
+
+        print("\n==============================")
+        print(f"Progetto: {project_path}")
+        print("==============================")
 
         for root, _, files in os.walk(project_path):
             for f in files:
                 if f.endswith(".py"):
-                    cc_val, mi_val, sloc_val = self._calculate_file_metrics(os.path.join(root, f))
+                    cc_blocks, mi_val, sloc_val = self._calculate_file_metrics(
+                        os.path.join(root, f)
+                    )
+                    if cc_blocks:
+                        all_cc_values.extend([b.complexity for b in cc_blocks])
+                        print(
+                            f"File: {os.path.join(root, f)} | "
+                            f"{len(cc_blocks)} blocchi"
+                        )
                     if sloc_val > 0:
-                        print(f"File: {os.path.join(root, f)} | CC: {cc_val} | MI: {mi_val} | SLOC: {sloc_val}")
-                        cc_list.append((cc_val, sloc_val))
                         mi_list.append((mi_val, sloc_val))
                         sloc_list.append(sloc_val)
 
+        # Media semplice dei blocchi (Radon -a)
+        if all_cc_values:
+            cc_avg = sum(all_cc_values) / len(all_cc_values)
+        else:
+            cc_avg = 0
+
+        print(f"\n--- Calcolo media CC semplice (come Radon -a) ---")
+        print(f"Somma(CC blocchi) = {sum(all_cc_values)}")
+        print(f"Numero blocchi    = {len(all_cc_values)}")
+        print(f"CC_media_blocchi  = {cc_avg}")
+
+        # MI media pesata per SLOC
         total_sloc = sum(sloc_list) if sloc_list else 1
-        cc_avg = sum(cc * sloc for cc, sloc in cc_list) / total_sloc if cc_list else 0
         mi_avg = sum(mi * sloc for mi, sloc in mi_list) / total_sloc if mi_list else 0
 
         return round(mi_avg, 2), round(cc_avg, 2)
@@ -76,12 +106,14 @@ class CodeMetrics:
             proj_path = os.path.join(self.projects_path, proj)
             if not os.path.isdir(proj_path):
                 continue
+
             mi_avg, cc_avg = self._calculate_project_metrics(proj_path)
             self.metrics_list.append({
                 "ProjectName": proj,
                 "MI_avg": mi_avg,
                 "CC_avg": cc_avg
             })
+
         return self.metrics_list
 
     def save_csv(self, base_output_folder: str):
@@ -96,25 +128,23 @@ class CodeMetrics:
         metrics_folder = os.path.join(base_output_folder, "metrics")
         os.makedirs(metrics_folder, exist_ok=True)
 
-        #Trova il prossimo numero disponibile
         existing_files = [
             f for f in os.listdir(metrics_folder)
-            if f.startswith("metrics.csv") and f.split("_")[0].isdigit()
+            if f.endswith("_metrics.csv") and f.split("_")[0].isdigit()
         ]
 
-        if existing_files:
-            max_index = max(int(f.split("_")[0]) for f in existing_files)
-            next_index = max_index + 1
-        else:
-            next_index = 1
+        next_index = (
+            max(int(f.split("_")[0]) for f in existing_files) + 1
+            if existing_files else 1
+        )
 
-        csv_filename = f"{next_index}_metrics.csv"
-        csv_file = os.path.join(metrics_folder, csv_filename)
-        
+        csv_file = os.path.join(metrics_folder, f"{next_index}_metrics.csv")
+
         with open(csv_file, 'w', newline='', encoding='utf-8') as f:
-            writer = csv.DictWriter(f, fieldnames=["ProjectName", "MI_avg", "CC_avg"])
+            writer = csv.DictWriter(
+                f, fieldnames=["ProjectName", "MI_avg", "CC_avg"]
+            )
             writer.writeheader()
-            for m in self.metrics_list:
-                writer.writerow(m)
+            writer.writerows(self.metrics_list)
 
         logger.info("CSV metriche salvato in %s", csv_file)
