@@ -4,103 +4,121 @@ from radon.complexity import cc_visit
 from radon.metrics import mi_visit
 from modules.utils.logger import get_logger
 
+# Logger
 logger = get_logger(__name__)
 
+"""
+CodeMetrics Script
+
+This script calculates code quality metrics for Python projects:
+1. CC (Cyclomatic Complexity) - measures the complexity of each function/class
+   - CC is calculated for each block (function/method/class)
+   - Project-level CC is the average of all block CCs (simple mean, like Radon -a)
+2. MI (Maintainability Index) - measures maintainability
+   - MI is calculated per file
+   - Project-level MI is a weighted average using the file's SLOC
+
+The output shows:
+- CC for each function/block
+- Total number of blocks per file
+- CC and MI for each file
+- Project-level CC (average of blocks) and MI (weighted by SLOC)
+"""
 
 class CodeMetrics:
-    """
-    Class to calculate code quality metrics (CC and MI) for a set of projects.
-    Output will be saved nella cartella 'metrics' dentro output.
-    """
+    """Class to calculate CC and MI metrics for a set of projects."""
 
     def __init__(self, projects_path: str):
         self.projects_path = projects_path
         self.metrics_list = []
 
     def _calculate_file_metrics(self, file_path: str):
-        """Calcola CC, MI e SLOC di un singolo file Python."""
+        """Calculate CC, MI, and SLOC for a single Python file."""
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
                 code = f.read()
         except Exception as e:
-            logger.warning("Non posso leggere %s: %s", file_path, e)
-            return [], 0, 0  # ritorna lista vuota di blocchi
+            logger.info(f"Cannot read file {file_path}: {e}")
+            return [], 0, 0  # return empty blocks list
 
-        # CC — dettagli per blocco
+        # --- Calculate CC per block ---
         cc_blocks = []
         try:
             cc_blocks = cc_visit(code)
-            print(f"\n  Dettaglio CC per file: {file_path}")
-            for b in cc_blocks:
-                print(
-                    f"    Blocco: {b.name} | "
-                    f"Tipo: {b.__class__.__name__} | "
-                    f"CC_blocco: {b.complexity}"
-                )
+            logger.info(f"CC details for file: {file_path}")
+            for i, b in enumerate(cc_blocks, 1):
+                block_sloc = b.endline - b.lineno + 1
+                logger.info(f"  Block {i}: {b.name} | Type: {b.__class__.__name__} | "
+                            f"CC: {b.complexity} | SLOC block: {block_sloc}")
         except Exception as e:
-            logger.warning("Errore CC %s: %s", file_path, e)
+            logger.info(f"Error calculating CC for {file_path}: {e}")
 
-        # MI
+        # --- Calculate MI ---
         try:
-            mi_score = mi_visit(code, False)
+            mi_score = mi_visit(code, multi=False)
         except Exception as e:
-            logger.warning("Errore MI %s: %s", file_path, e)
+            logger.info(f"Error calculating MI for {file_path}: {e}")
             mi_score = 0
 
-        # SLOC effettivo
-        sloc = sum(
-            1 for line in code.splitlines()
-            if line.strip() and not line.strip().startswith("#")
-        )
+        # --- Calculate SLOC ---
+        sloc = sum(1 for line in code.splitlines() if line.strip() and not line.strip().startswith("#"))
+
+        # Total CC for this file
+        cc_total_file = sum(b.complexity for b in cc_blocks)
+        num_blocks = len(cc_blocks)
+
+        logger.info(f"Total CC file: {cc_total_file}, Number of blocks: {num_blocks}, "
+                    f"MI: {mi_score:.2f}, SLOC: {sloc}")
 
         return cc_blocks, mi_score, sloc
 
     def _calculate_project_metrics(self, project_path: str):
-        """Calcola CC media (come Radon -a) e MI pesato per progetto."""
-        all_cc_values = []  # lista di tutte le complessità dei blocchi
-        mi_list, sloc_list = [], []
+        """Calculate project-level metrics: CC (average of blocks) and MI (weighted by SLOC)."""
+        all_cc_values = []  # list of all block CCs in the project
+        mi_list = []
+        sloc_list = []
 
-        print("\n==============================")
-        print(f"Progetto: {project_path}")
-        print("==============================")
+        logger.info(f"Start analysis for project: {project_path}")
 
         for root, _, files in os.walk(project_path):
             for f in files:
                 if f.endswith(".py"):
-                    cc_blocks, mi_val, sloc_val = self._calculate_file_metrics(
-                        os.path.join(root, f)
-                    )
+                    cc_blocks, mi_val, sloc_val = self._calculate_file_metrics(os.path.join(root, f))
                     if cc_blocks:
                         all_cc_values.extend([b.complexity for b in cc_blocks])
-                        print(
-                            f"File: {os.path.join(root, f)} | "
-                            f"{len(cc_blocks)} blocchi"
-                        )
                     if sloc_val > 0:
                         mi_list.append((mi_val, sloc_val))
                         sloc_list.append(sloc_val)
 
-        # Media semplice dei blocchi (Radon -a)
+        
+
+        # --- Calculate weighted MI using SLOC ---
+        total_sloc = sum(sloc_list) if sloc_list else 1
+        if mi_list:
+            mi_avg = sum(mi * sloc for mi, sloc in mi_list) / total_sloc
+        else:
+            mi_avg = 0
+
+        logger.info(f"[MI] Weighted MI calculation: sum(MI * SLOC) / total SLOC = {mi_avg:.2f}")
+        # --- Calculate simple average CC like Radon -a ---
         if all_cc_values:
             cc_avg = sum(all_cc_values) / len(all_cc_values)
         else:
             cc_avg = 0
 
-        print(f"\n--- Calcolo media CC semplice (come Radon -a) ---")
-        print(f"Somma(CC blocchi) = {sum(all_cc_values)}")
-        print(f"Numero blocchi    = {len(all_cc_values)}")
-        print(f"CC_media_blocchi  = {cc_avg}")
+        logger.info(f"--- Calculating simple average CC (like Radon -a) ---")
+        logger.info(f"[CC] Sum of all CC blocks: {sum(all_cc_values)}")
+        logger.info(f"[CC] Number of blocks: {len(all_cc_values)}")
+        logger.info(f"[CC] Average CC (blocks): {cc_avg:.2f}")
 
-        # MI media pesata per SLOC
-        total_sloc = sum(sloc_list) if sloc_list else 1
-        mi_avg = sum(mi * sloc for mi, sloc in mi_list) / total_sloc if mi_list else 0
+        logger.info(f"[MI and CC]Project {project_path} metrics calculated: MI={mi_avg:.2f}, CC={cc_avg:.2f}")
 
         return round(mi_avg, 2), round(cc_avg, 2)
 
     def analyze_all_projects(self):
-        """Calcola le metriche per tutti i progetti nella cartella."""
+        """Calculate metrics for all projects in the folder."""
         if not os.path.isdir(self.projects_path):
-            raise FileNotFoundError(f"Folder non trovato: {self.projects_path}")
+            raise FileNotFoundError(f"Folder not found: {self.projects_path}")
 
         for proj in os.listdir(self.projects_path):
             proj_path = os.path.join(self.projects_path, proj)
@@ -113,16 +131,14 @@ class CodeMetrics:
                 "MI_avg": mi_avg,
                 "CC_avg": cc_avg
             })
+            logger.info(f"Project {proj} => Weighted MI: {mi_avg}, Average CC: {cc_avg}")
 
         return self.metrics_list
 
     def save_csv(self, base_output_folder: str):
-        """
-        Salva le metriche in un CSV nella cartella 'metrics' dentro output.
-        Se la cartella non esiste la crea.
-        """
+        """Save project metrics to a CSV in 'metrics' folder inside output."""
         if not self.metrics_list:
-            logger.warning("Nessuna metrica da salvare")
+            logger.info("No metrics to save")
             return
 
         metrics_folder = os.path.join(base_output_folder, "metrics")
@@ -141,10 +157,8 @@ class CodeMetrics:
         csv_file = os.path.join(metrics_folder, f"{next_index}_metrics.csv")
 
         with open(csv_file, 'w', newline='', encoding='utf-8') as f:
-            writer = csv.DictWriter(
-                f, fieldnames=["ProjectName", "MI_avg", "CC_avg"]
-            )
+            writer = csv.DictWriter(f, fieldnames=["ProjectName", "MI_avg", "CC_avg"])
             writer.writeheader()
             writer.writerows(self.metrics_list)
 
-        logger.info("CSV metriche salvato in %s", csv_file)
+        logger.info(f"CSV metrics saved in {csv_file}")
