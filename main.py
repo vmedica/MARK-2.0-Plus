@@ -23,15 +23,15 @@ PROJECT_LIST_PATH = IO_PATH / "applied_projects.csv"
 REPOSITORY_PATH = IO_PATH / "repos"
 ANALYZER_PATH = Path("./modules/analyzer")
 ORACLE_PATH = Path("./modules/oracle")
-N_REPOS = 5
+N_REPOS = 10
 
 # Steps
-CLONER = False
-CLONER_CHECK = False
+CLONER = True
+CLONER_CHECK = True
 ANALYSIS = True
 METRICS = True
-MERGER = False
-RESULT_ANALYSIS = False
+MERGER = True
+RESULT_ANALYSIS = True
 
 
 def main() -> None:
@@ -75,7 +75,7 @@ def main() -> None:
 
     # === CALCULATE AND SAVE METRICS ===
     if METRICS:
-        logger.info("*** INIZIO CALCOLO METRICHE CC E MI ***")
+        logger.info("*** INIZIO CALCOLO METRICHE MI E CC ***")
         
         metrics = CodeMetrics(projects_path=str(REPOSITORY_PATH))
         metrics.analyze_all_projects()

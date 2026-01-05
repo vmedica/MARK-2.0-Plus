@@ -1,3 +1,23 @@
+"""
+CodeMetrics Script
+
+This script calculates code quality metrics for Python projects:
+1. CC (Cyclomatic Complexity) - measures the complexity of each function/class
+   - CC is calculated for each block (function/method/class)
+   - Project-level CC is the average of all block CCs (simple mean, like Radon -a)
+2. MI (Maintainability Index) - measures maintainability
+   - MI is calculated for each file
+   - Project-level MI is a weighted average using the file's SLOC
+
+Formulas:
+cc_avg = (CC_blocco_1 + CC_blocco_2 + ... + CC_blocco_n) / n
+mi_avg = (MI_file_1 * SLOC_file_1 + MI_file_2 * SLOC_file_2 + ... + MI_file_m * SLOC_file_m) / (SLOC_file_1 + ... + SLOC_file_m)
+
+
+The output shows:
+- CC and MI for each Project
+"""
+
 import os
 import csv
 from radon.complexity import cc_visit
@@ -7,23 +27,7 @@ from modules.utils.logger import get_logger
 # Logger
 logger = get_logger(__name__)
 
-"""
-CodeMetrics Script
 
-This script calculates code quality metrics for Python projects:
-1. CC (Cyclomatic Complexity) - measures the complexity of each function/class
-   - CC is calculated for each block (function/method/class)
-   - Project-level CC is the average of all block CCs (simple mean, like Radon -a)
-2. MI (Maintainability Index) - measures maintainability
-   - MI is calculated per file
-   - Project-level MI is a weighted average using the file's SLOC
-
-The output shows:
-- CC for each function/block
-- Total number of blocks per file
-- CC and MI for each file
-- Project-level CC (average of blocks) and MI (weighted by SLOC)
-"""
 
 class CodeMetrics:
     """Class to calculate CC and MI metrics for a set of projects."""
@@ -47,7 +51,9 @@ class CodeMetrics:
             cc_blocks = cc_visit(code)
             logger.info(f"CC details for file: {file_path}")
             for i, b in enumerate(cc_blocks, 1):
-                block_sloc = b.endline - b.lineno + 1
+                block_sloc = b.endline - b.lineno + 1   # b.lineno -> the line number where the block starts (e.g., a function)
+                                                        # b.endline -> the line number where the block ends
+                                                        # +1 to also count the starting line
                 logger.info(f"  Block {i}: {b.name} | Type: {b.__class__.__name__} | "
                             f"CC: {b.complexity} | SLOC block: {block_sloc}")
         except Exception as e:
@@ -72,7 +78,7 @@ class CodeMetrics:
 
         return cc_blocks, mi_score, sloc
 
-    def _calculate_project_metrics(self, project_path: str):
+    def _calculate_project_metrics(self, project_path: str):    #_ for private method
         """Calculate project-level metrics: CC (average of blocks) and MI (weighted by SLOC)."""
         all_cc_values = []  # list of all block CCs in the project
         mi_list = []
@@ -89,8 +95,6 @@ class CodeMetrics:
                     if sloc_val > 0:
                         mi_list.append((mi_val, sloc_val))
                         sloc_list.append(sloc_val)
-
-        
 
         # --- Calculate weighted MI using SLOC ---
         total_sloc = sum(sloc_list) if sloc_list else 1
