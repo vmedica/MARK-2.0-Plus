@@ -1,7 +1,7 @@
 #LOG files
 *.log
 
-#PYTHON
+#PYCACHE
 *.pyc
 
 #CSV files
@@ -9,3 +9,6 @@
 
 #FOLDERS
 io/repos/
+
+#Venv settings
+venv
