@@ -12,6 +12,7 @@ from modules.utils.logger import get_logger
 from modules.analyzer.analyzer_factory import AnalyzerFactory #required import
 from modules.analyzer.builder.consumer_analyzer_builder import ConsumerAnalyzerBuilder #required import
 from modules.analyzer.builder.producer_analyzer_builder import ProducerAnalyzerBuilder #required import
+from modules.analyzer.builder.metrics_analyzer_builder import MetricsAnalyzerBuilder #required import
 
 logger = get_logger(__name__)
 
@@ -22,12 +23,13 @@ PROJECT_LIST_PATH = IO_PATH / "applied_projects.csv"
 REPOSITORY_PATH = IO_PATH / "repos"
 ANALYZER_PATH = Path("./modules/analyzer")
 ORACLE_PATH = Path("./modules/oracle")
-N_REPOS = 50
+N_REPOS = 7
 
 # Steps
 CLONER = True
 CLONER_CHECK = True
 ANALYSIS = True
+METRICS = True
 MERGER = True
 RESULT_ANALYSIS = True
 
@@ -70,6 +72,17 @@ def main() -> None:
             role=AnalyzerRole.CONSUMER
         )
         dir_consumer = consumer_facade.run_analysis(rules_3=True)
+
+    # === ANALISI METRICHE CODICE ===
+    if METRICS:  # puoi anche fare un flag separato se vuoi
+        logger.info("*** INIZIO IL CALCOLO DELLE METRICHE ***")
+        metrics_facade = MLAnalysisFacade(
+            input_path=REPOSITORY_PATH,
+            io_path=IO_PATH,
+            role=AnalyzerRole.METRICS
+        )
+        dir_metrics = metrics_facade.run_analysis()  # genererà metrics/<project>_metrics.csv
+
 
     # === MERGE DEI RISULTATI ===
     if MERGER:
