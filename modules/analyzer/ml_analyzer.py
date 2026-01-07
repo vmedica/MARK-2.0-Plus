@@ -85,6 +85,12 @@ class MLAnalyzer(ABC):
         # --- CC ---
         try:
             cc_blocks = cc_visit(code)
+            # Log complexity of each block
+            for block in cc_blocks:
+                logger.info(
+                    "CC block in %s: %s lines, complexity=%d",
+                    file, block.lineno, block.complexity
+                )
         except Exception as e:
             logger.info(f"Error calculating CC for {file}: {e}")
             cc_blocks = []
@@ -92,8 +98,10 @@ class MLAnalyzer(ABC):
         # --- MI ---
         try:
             mi_val = mi_visit(code, multi=False)
+            logger.info("MI for %s: %.2f", file, mi_val)
         except Exception:
             mi_val = 0
+            logger.info("MI calculation failed for %s", file)
 
         # --- SLOC ---
         sloc_val = 0
@@ -111,10 +119,8 @@ class MLAnalyzer(ABC):
         return libraries, keywords, list_load_keywords, cc_blocks, mi_val, sloc_val
 
 
-    # ============================================================
-    # ANALISI DIRECTORY
-    # ============================================================
 
+    # ANALISI DIRECTORY
     def analyze_project(
         self, repo, project, directory, output_folder, **kwargs
     ) -> Tuple[pd.DataFrame, list, list, list]:
@@ -130,7 +136,7 @@ class MLAnalyzer(ABC):
 
                 file_path = os.path.join(root, filename)
 
-                # === ML ANALYSIS AND METRICS ===
+                # ML ANALYSIS AND METRICS
                 _, keywords, _, cc_blocks, mi_val, sloc_val = self.analyze_single_file(file_path, repo, **kwargs)
 
                 if self.role in [AnalyzerRole.METRICS]:
@@ -197,7 +203,7 @@ class MLAnalyzer(ABC):
                 if not df.empty:
                     all_rows.extend(df.to_dict(orient="records"))
 
-            # === FINAL METRICS ONLY FOR METRICS ===
+            # FINAL METRICS ONLY FOR METRICS
             if self.role == AnalyzerRole.METRICS:
                 cc_avg = sum(project_cc) / len(project_cc) if project_cc else 0
                 total_sloc = sum(project_sloc)
