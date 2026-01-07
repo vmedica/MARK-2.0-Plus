@@ -4,7 +4,7 @@ from modules.analyzer.ml_analyzer import MLAnalyzer
 from modules.analyzer.ml_roles import AnalyzerRole
 
 class MLMetricsAnalyzer(MLAnalyzer):
-    """Analyzer dedicato al calcolo delle metriche codice."""
+    """Analyzer dedicated to calculating code metrics."""
 
     def __init__(
         self,
@@ -13,7 +13,7 @@ class MLMetricsAnalyzer(MLAnalyzer):
         filters=None,
         keyword_strategy=None
     ):
-        # chiama il costruttore base
+        # calls the base constructor
         super().__init__(
             role=role,
             library_dicts=library_dicts,
@@ -22,5 +22,5 @@ class MLMetricsAnalyzer(MLAnalyzer):
         )
 
     def check_library(self, file, **kwargs):
-        # per METRICS non serve controllare librerie ML
+        # METRICS does not need to check ML libraries
         return [], [], []
