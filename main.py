@@ -82,7 +82,6 @@ def main() -> None:
             role=AnalyzerRole.METRICS
         )
         dir_metrics = metrics_facade.run_analysis()
-        logger.info(f"Calculated metrics: {OUTPUT_PATH / dir_metrics}")
 
     # === MERGE DEI RISULTATI ===
     if MERGER:

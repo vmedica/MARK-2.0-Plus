@@ -41,14 +41,10 @@ class MLAnalyzer(ABC):
         self.filters = filters or []
         self.library_dicts = library_dicts or []
         self.keyword_strategy = keyword_strategy or DefaultKeywordMatcher()
-
-        # === METRICHE SOLO PER PRODUCER ===
         self.project_metrics = []
 
-    # ============================================================
-    # SALVATAGGIO METRICHE CSV (SOLO PRODUCER)
-    # ============================================================
-
+    
+    # SAVING CSV METRICS (METRICS ONLY)
     def _save_metrics_csv(self, output_base_path: str):
         if self.role != AnalyzerRole.METRICS:
             return
@@ -63,19 +59,16 @@ class MLAnalyzer(ABC):
 
         logger.info("Metrics saved to %s", csv_path)
 
-    # ============================================================
-    # ANALISI FILE
-    # ============================================================
-
+    # SINGLE FILE ANALYSIS
     def analyze_single_file(self, file, repo, **kwargs):
         """
-        Restituisce:
-        - librerie ML trovate
-        - keywords
-        - eventuali load keywords
-        - CC (lista complessità dei blocchi)
-        - MI (singolo valore)
-        - SLOC
+        Returns:
+        -ML libraries found
+        -keywords
+        -any load keywords
+        -CC (block complexity list)
+        -MI (single value)
+        -SLOC (Source Lines Of Code)
         """
         if not os.path.isfile(file):
             return [], [], [], [], 0, 0
@@ -103,10 +96,11 @@ class MLAnalyzer(ABC):
             mi_val = 0
 
         # --- SLOC ---
-        sloc_val = sum(
-            1 for line in code.splitlines()
-            if line.strip() and not line.strip().startswith("#")
-        )
+        sloc_val = 0
+        for line in code.splitlines():
+            # ignore empty lines and comments
+            if line.strip() and not line.strip().startswith("#"):
+                sloc_val += 1
 
         if keywords:
             logger.info(
@@ -136,10 +130,9 @@ class MLAnalyzer(ABC):
 
                 file_path = os.path.join(root, filename)
 
-                # === ANALISI ML E METRICHE ===
+                # === ML ANALYSIS AND METRICS ===
                 _, keywords, _, cc_blocks, mi_val, sloc_val = self.analyze_single_file(file_path, repo, **kwargs)
 
-                # --- aggiorna metriche solo se PRODUCER e file Python ---
                 if self.role in [AnalyzerRole.METRICS]:
                     all_cc_values.extend(b.complexity for b in cc_blocks)
 
@@ -147,7 +140,6 @@ class MLAnalyzer(ABC):
                         mi_weighted.append((mi_val, sloc_val))
                         sloc_list.append(sloc_val)
 
-                # --- aggiorna righe ML ---
                 if keywords:
                     for keyword in keywords:
                         rows.append({
@@ -170,10 +162,8 @@ class MLAnalyzer(ABC):
 
         return df, all_cc_values, mi_weighted, sloc_list
 
-    # ============================================================
-    # ANALISI SET DI PROGETTI
-    # ============================================================
-
+    
+    # PROJECT SET ANALYSIS
     def analyze_projects_set(self, input_folder, output_folder, **kwargs):
         all_rows = []
 
@@ -207,7 +197,7 @@ class MLAnalyzer(ABC):
                 if not df.empty:
                     all_rows.extend(df.to_dict(orient="records"))
 
-            # === METRICHE FINALI SOLO METRICS ===
+            # === FINAL METRICS ONLY FOR METRICS ===
             if self.role == AnalyzerRole.METRICS:
                 cc_avg = sum(project_cc) / len(project_cc) if project_cc else 0
                 total_sloc = sum(project_sloc)
@@ -229,10 +219,6 @@ class MLAnalyzer(ABC):
         self._save_metrics_csv(output_folder)
 
         return final_df
-
-    # ============================================================
-    # METODO ASTRATTO
-    # ============================================================
 
     @abstractmethod
     def check_library(self, file, **kwargs):
