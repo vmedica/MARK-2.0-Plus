@@ -7,3 +7,4 @@ class AnalyzerRole(Enum):
     """Enumeration of ML analyzer roles."""
     PRODUCER = "producer"
     CONSUMER = "consumer"
+    METRICS = "metrics"
