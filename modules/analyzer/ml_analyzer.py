@@ -56,21 +56,8 @@ class MLAnalyzer(ABC):
         if not self.project_metrics:
             logger.info("No metrics to save")
             return
-
-        metrics_dir = os.path.join(output_base_path, "metrics")
-        os.makedirs(metrics_dir, exist_ok=True)
-
-        existing = [
-            f for f in os.listdir(metrics_dir)
-            if f.endswith("_metrics.csv") and f.split("_")[0].isdigit()
-        ]
-
-        next_index = (
-            max(int(f.split("_")[0]) for f in existing) + 1
-            if existing else 1
-        )
-
-        csv_path = os.path.join(metrics_dir, f"{next_index}_metrics.csv")
+        
+        csv_path = os.path.join(output_base_path, "metrics.csv")
 
         pd.DataFrame(self.project_metrics).to_csv(csv_path, index=False)
 
@@ -203,7 +190,7 @@ class MLAnalyzer(ABC):
                     continue
 
                 logger.info("Project: %s", project)
-
+                
                 df, cc_vals, mi_vals, sloc_vals = self.analyze_project(
                     full_dir_path,
                     project,

@@ -23,7 +23,7 @@ PROJECT_LIST_PATH = IO_PATH / "applied_projects.csv"
 REPOSITORY_PATH = IO_PATH / "repos"
 ANALYZER_PATH = Path("./modules/analyzer")
 ORACLE_PATH = Path("./modules/oracle")
-N_REPOS = 7
+N_REPOS = 2
 
 # Steps
 CLONER = True
@@ -74,15 +74,15 @@ def main() -> None:
         dir_consumer = consumer_facade.run_analysis(rules_3=True)
 
     # === ANALISI METRICHE CODICE ===
-    if METRICS:  # puoi anche fare un flag separato se vuoi
+    if METRICS: 
         logger.info("*** INIZIO IL CALCOLO DELLE METRICHE ***")
         metrics_facade = MLAnalysisFacade(
             input_path=REPOSITORY_PATH,
             io_path=IO_PATH,
             role=AnalyzerRole.METRICS
         )
-        dir_metrics = metrics_facade.run_analysis()  # genererà metrics/<project>_metrics.csv
-
+        dir_metrics = metrics_facade.run_analysis()
+        logger.info(f"Calculated metrics: {OUTPUT_PATH / dir_metrics}")
 
     # === MERGE DEI RISULTATI ===
     if MERGER:
