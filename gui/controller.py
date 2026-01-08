@@ -1,0 +1,151 @@
+"""Application Controller - Connects views to services."""
+
+import threading
+from pathlib import Path
+from typing import Optional
+
+from gui.services.pipeline_service import (
+    PipelineService,
+    PipelineConfig,
+    PipelineResult,
+)
+from gui.services.output_reader import OutputReader
+
+from gui.main_window import MainWindow
+
+
+class AppController:
+    """Application controller that connects views to services."""
+
+    def __init__(self, main_window: MainWindow, output_reader: OutputReader):
+        self.main_window = main_window
+        self.output_reader = output_reader
+        self._pipeline_service: Optional[PipelineService] = None
+        self._pipeline_thread: Optional[threading.Thread] = None
+
+        self._setup_callbacks()
+        self._refresh_output_tree()
+
+    def _setup_callbacks(self) -> None:
+        """Register callbacks on all views."""
+        config_view = self.main_window.get_config_view()
+        config_view.register_callback("on_start_pipeline", self._on_start_pipeline)
+
+        output_view = self.main_window.get_output_view()
+        output_view.register_callback("on_file_select", self._on_file_select)
+        output_view.register_callback("on_refresh", self._refresh_output_tree)
+
+    def _on_start_pipeline(self) -> None:
+        """Handle start pipeline request from config view."""
+        config_view = self.main_window.get_config_view()
+        config_values = config_view.get_config_values()
+
+        # Validate paths
+        io_path = config_values["io_path"]
+        if not io_path.exists():
+            self.main_window.show_error(
+                "Invalid Path", f"IO path does not exist: {io_path}"
+            )
+            return
+
+        # Update output reader to use io_path/output
+        self.output_reader.output_path = io_path / "output"
+
+        # Create pipeline configuration
+        pipeline_config = PipelineConfig(
+            io_path=config_values["io_path"],
+            repository_path=config_values["repository_path"],
+            project_list_path=config_values["project_list_path"],
+            n_repos=config_values["n_repos"],
+            run_cloner=config_values["run_cloner"],
+            run_cloner_check=config_values["run_cloner_check"],
+            run_producer_analysis=config_values["run_producer_analysis"],
+            run_consumer_analysis=config_values["run_consumer_analysis"],
+            run_metrics_analysis=config_values["run_metrics_analysis"],
+            rules_3=config_values["rules_3"],
+        )
+
+        self._pipeline_service = PipelineService(pipeline_config)
+        config_view.set_running_state(True)
+
+        # Start pipeline in background thread
+        self._pipeline_thread = threading.Thread(
+            target=self._run_pipeline_thread, daemon=True
+        )
+        self._pipeline_thread.start()
+
+        # Start polling for completion
+        self._poll_completion()
+
+    def _run_pipeline_thread(self) -> None:
+        """Run the pipeline in a background thread."""
+        try:
+            self._result = self._pipeline_service.run_pipeline()
+        except Exception as e:
+            self._result = PipelineResult(success=False, error_message=str(e))
+
+    def _poll_completion(self) -> None:
+        """Poll for pipeline completion."""
+        if self._pipeline_thread and self._pipeline_thread.is_alive():
+            self.main_window.schedule(100, self._poll_completion)
+        else:
+            self._on_pipeline_complete()
+
+    def _on_pipeline_complete(self) -> None:
+        """Handle pipeline completion."""
+        config_view = self.main_window.get_config_view()
+        config_view.set_running_state(False)
+
+        result = getattr(self, "_result", None)
+        if result and result.success:
+            self.main_window.show_info(
+                "Success",
+                f"Pipeline completed successfully!\nCompleted steps: {len(result.completed_steps)}",
+            )
+            self._refresh_output_tree()
+            self.main_window.switch_to_output_tab()
+        elif result:
+            self.main_window.show_error(
+                "Pipeline Failed", f"Error: {result.error_message}"
+            )
+        else:
+            self.main_window.show_error("Error", "Unknown error occurred")
+
+    def _refresh_output_tree(self) -> None:
+        """Refresh the output directory tree."""
+        output_view = self.main_window.get_output_view()
+        try:
+            tree = self.output_reader.scan_output_tree()
+            tree_data = self._convert_tree_to_dict(tree)
+            output_view.populate_tree(tree_data)
+        except Exception as e:
+            output_view.show_error(f"Failed to scan output directory: {e}")
+
+    def _convert_tree_to_dict(self, tree) -> dict:
+        """Convert OutputTree to dictionary format expected by view."""
+        result = {}
+        for category in ("producer", "consumer", "metrics"):
+            dirs = getattr(tree, f"{category}_dirs", [])
+            result[category] = []
+            for output_dir in dirs:
+                dir_data = {
+                    "name": output_dir.name,
+                    "files": [
+                        {"name": f.name, "path": f.path, "is_summary": f.is_summary}
+                        for f in output_dir.files
+                    ],
+                }
+                result[category].append(dir_data)
+        return result
+
+    def _on_file_select(self, file_path: Path) -> None:
+        """Handle file selection in output tree."""
+        output_view = self.main_window.get_output_view()
+        output_view.show_loading()
+        try:
+            csv_data = self.output_reader.load_csv(file_path)
+            output_view.display_csv_data(
+                headers=csv_data.headers, rows=csv_data.rows, file_name=file_path.name
+            )
+        except Exception as e:
+            output_view.show_error(str(e))
