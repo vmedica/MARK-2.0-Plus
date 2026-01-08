@@ -4,11 +4,8 @@ import tkinter as tk
 from pathlib import Path
 from typing import List, Dict, Any
 
-try:
-    import ttkbootstrap as ttk
-    from ttkbootstrap.constants import *
-except ImportError:
-    import tkinter.ttk as ttk
+import ttkbootstrap as ttk
+from ttkbootstrap.constants import *
 
 from gui.views.base_view import BaseView
 from gui.style import PADDING, FONTS
@@ -114,7 +111,7 @@ class OutputView(BaseView):
 
         categories = {
             "producer": "📦 Producer Analysis",
-            "consumer": "🔌 Consumer Analysis",
+            "consumer": "👤 Consumer Analysis",
             "metrics": "📊 Metrics Analysis",
         }
 
@@ -153,9 +150,25 @@ class OutputView(BaseView):
             self.data_tree.delete(item)
 
         self.data_tree["columns"] = headers
+
+        # Configure columns with fixed widths
         for col in headers:
             self.data_tree.heading(col, text=col, anchor="w")
-            self.data_tree.column(col, width=max(100, len(col) * 10), minwidth=50)
+
+            # Assign larger widths to important columns
+            if col.lower() in ["projectname", "project_name"]:
+                width = 300
+            elif col.lower() in ["where", "path"]:
+                width = 400
+            else:
+                width = 150
+
+            self.data_tree.column(
+                col,
+                width=width,
+                minwidth=80,
+                stretch=False,  # Enable horizontal scrolling
+            )
 
         for i, row in enumerate(rows):
             self.data_tree.insert(
@@ -168,4 +181,4 @@ class OutputView(BaseView):
 
     def show_error(self, message: str) -> None:
         """Show error message."""
-        self.current_file_var.set(f"⚠️ Error: {message}")
+        self.current_file_var.set(f"Error: {message}")

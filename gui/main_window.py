@@ -3,11 +3,8 @@
 import tkinter as tk
 from typing import Callable
 
-try:
-    import ttkbootstrap as ttk
-    from ttkbootstrap.constants import *
-except ImportError:
-    import tkinter.ttk as ttk
+import ttkbootstrap as ttk
+from ttkbootstrap.constants import *
 
 from gui.views.config_view import ConfigView
 from gui.views.output_view import OutputView

@@ -4,14 +4,11 @@ import tkinter as tk
 from tkinter import filedialog
 from pathlib import Path
 
-try:
-    import ttkbootstrap as ttk
-    from ttkbootstrap.constants import *
-except ImportError:
-    import tkinter.ttk as ttk
+import ttkbootstrap as ttk
+from ttkbootstrap.constants import *
 
 from gui.views.base_view import BaseView
-from gui.style import PADDING, FONTS
+from gui.style import PADDING
 
 
 class ConfigView(BaseView):
@@ -160,8 +157,6 @@ class ConfigView(BaseView):
         )
         if path:
             self.io_path_var.set(path)
-            # self.repo_path_var.set(str(Path(path) / "repos"))
-            # self.project_list_var.set(str(Path(path) / "applied_projects.csv"))
 
     def _on_browse_repo_path(self) -> None:
         """Handle repository path browse button click."""

@@ -1,4 +1,4 @@
-"""Service layer for business logic - testable without GUI dependencies."""
+"""Service layer for business logic"""
 
 from gui.services.pipeline_service import PipelineService
 from gui.services.output_reader import OutputReader

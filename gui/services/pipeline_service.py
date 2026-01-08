@@ -1,7 +1,6 @@
 """Pipeline Service - Orchestrates the ML analysis pipeline."""
 
 from dataclasses import dataclass, field
-from enum import Enum, auto
 from pathlib import Path
 from typing import Optional
 
@@ -17,16 +16,6 @@ from modules.analyzer.builder.producer_analyzer_builder import ProducerAnalyzerB
 from modules.analyzer.builder.metrics_analyzer_builder import MetricsAnalyzerBuilder
 
 logger = get_logger(__name__)
-
-
-class PipelineStep(Enum):
-    """Enumeration of pipeline steps."""
-
-    CLONER = auto()
-    CLONER_CHECK = auto()
-    PRODUCER_ANALYSIS = auto()
-    CONSUMER_ANALYSIS = auto()
-    METRICS_ANALYSIS = auto()
 
 
 @dataclass
@@ -48,13 +37,6 @@ class PipelineConfig:
     # Analysis options
     rules_3: bool = True
 
-    def __post_init__(self):
-        """Set default paths based on io_path if not provided."""
-        if self.repository_path is None:
-            self.repository_path = self.io_path / "repos"
-        if self.project_list_path is None:
-            self.project_list_path = self.io_path / "applied_projects.csv"
-
 
 @dataclass
 class PipelineResult:
@@ -65,7 +47,6 @@ class PipelineResult:
     consumer_output_dir: Optional[str] = None
     metrics_output_dir: Optional[str] = None
     error_message: Optional[str] = None
-    completed_steps: list = field(default_factory=list)
 
 
 class PipelineService:
@@ -81,23 +62,18 @@ class PipelineService:
         try:
             if self.config.run_cloner:
                 self._run_cloner()
-                result.completed_steps.append(PipelineStep.CLONER)
 
             if self.config.run_cloner_check:
                 self._run_cloner_check()
-                result.completed_steps.append(PipelineStep.CLONER_CHECK)
 
             if self.config.run_producer_analysis:
                 result.producer_output_dir = self._run_producer_analysis()
-                result.completed_steps.append(PipelineStep.PRODUCER_ANALYSIS)
 
             if self.config.run_consumer_analysis:
                 result.consumer_output_dir = self._run_consumer_analysis()
-                result.completed_steps.append(PipelineStep.CONSUMER_ANALYSIS)
 
             if self.config.run_metrics_analysis:
                 result.metrics_output_dir = self._run_metrics_analysis()
-                result.completed_steps.append(PipelineStep.METRICS_ANALYSIS)
 
         except Exception as e:
             logger.exception("Pipeline execution failed")

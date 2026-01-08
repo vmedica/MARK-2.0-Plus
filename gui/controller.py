@@ -10,7 +10,6 @@ from gui.services.pipeline_service import (
     PipelineResult,
 )
 from gui.services.output_reader import OutputReader
-
 from gui.main_window import MainWindow
 
 
@@ -100,7 +99,7 @@ class AppController:
         if result and result.success:
             self.main_window.show_info(
                 "Success",
-                f"Pipeline completed successfully!\nCompleted steps: {len(result.completed_steps)}",
+                "Pipeline completed successfully!",
             )
             self._refresh_output_tree()
             self.main_window.switch_to_output_tab()
