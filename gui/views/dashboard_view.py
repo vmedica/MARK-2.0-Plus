@@ -17,33 +17,60 @@ class DashboardView:
         # LEFT – analysis list
         self.tree = ttk.Treeview(self.container, show="tree")
         self.tree.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
-
         self.tree.bind("<<TreeviewSelect>>", self._on_select)
 
-        # RIGHT – summary
-        self.summary = ttk.Frame(self.container)
-        self.summary.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
+        # RIGHT – main panel
+        self.right_panel = ttk.Frame(self.container)
+        self.right_panel.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
+        self.right_panel.columnconfigure(0, weight=1)
 
-        self.labels = {}
-        for i, key in enumerate(
-            ("Producer", "Consumer", "Producer & Consumer", "Non-ML")
-        ):
+        # --- Summary ---
+        self.summary = ttk.LabelFrame(self.right_panel, text="Classification Summary", padding=10)
+        self.summary.grid(row=0, column=0, sticky="nsew", pady=(0, 10))
+
+        self.summary_labels = {}
+        for key in ("Producer", "Consumer", "Producer & Consumer"):
             lbl = ttk.Label(self.summary, text=f"{key}: 0", font=("Segoe UI", 11))
             lbl.pack(anchor="w", pady=4)
-            self.labels[key] = lbl
+            self.summary_labels[key] = lbl
 
+        # --- Metrics ---
+        self.metrics_frame = ttk.LabelFrame(self.right_panel, text="Code Metrics", padding=10)
+        self.metrics_frame.grid(row=1, column=0, sticky="nsew", pady=(0, 10))
+
+        self.metrics_labels = {}
+        for key in ("Media Complexity Cyclomatic", "Media Maintainability Index"):
+            lbl = ttk.Label(self.metrics_frame, text=f"{key}: 0", font=("Segoe UI", 11))
+            lbl.pack(anchor="w", pady=4)
+            self.metrics_labels[key] = lbl
+
+        # --- Libraries ---
+        self.libs_frame = ttk.LabelFrame(self.right_panel, text="ML Libraries", padding=10)
+        self.libs_frame.grid(row=2, column=0, sticky="nsew")
+
+    # --- Callbacks ---
     def register_callback(self, name: str, fn: Callable):
         self.callbacks[name] = fn
 
+    # --- Popola la lista di analisi ---
     def populate_analyses(self, analysis_ids):
         self.tree.delete(*self.tree.get_children())
         for x in analysis_ids:
             self.tree.insert("", "end", iid=x, text=f"Analysis_{x}")
 
+    # --- Aggiorna Summary ---
     def update_summary(self, data: Dict[str, int]):
         for key, value in data.items():
-            self.labels[key].configure(text=f"{key}: {value}")
+            if key in self.summary_labels:  # evita KeyError
+                self.summary_labels[key].configure(text=f"{key}: {value}")
 
+    # --- Aggiorna Metrics ---
+    def update_metrics(self, data: Dict[str, float]):
+        for key, value in data.items():
+            if key in self.metrics_labels:  # evita KeyError
+                self.metrics_labels[key].configure(text=f"{key}: {value}")
+
+    # --- Evento selezione analisi ---
     def _on_select(self, _):
         sel = self.tree.selection()
         if sel and "on_analysis_select" in self.callbacks:

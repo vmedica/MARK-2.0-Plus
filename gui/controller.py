@@ -165,14 +165,15 @@ class AppController:
     def _on_analysis_select(self, analysis_id: str):
         base = self.output_reader.output_path
 
+        # --- Producer / Consumer ---
         prod_csv = base / "producer" / f"producer_{analysis_id}" / "results.csv"
         cons_csv = base / "consumer" / f"consumer_{analysis_id}" / "results.csv"
 
-        producer = self.output_reader.load_csv(prod_csv).rows
-        consumer = self.output_reader.load_csv(cons_csv).rows
+        producer_rows = self.output_reader.load_csv(prod_csv).rows
+        consumer_rows = self.output_reader.load_csv(cons_csv).rows
 
-        prod_set = {r[0] for r in producer}
-        cons_set = {r[0] for r in consumer}
+        prod_set = {r[0] for r in producer_rows}
+        cons_set = {r[0] for r in consumer_rows}
 
         summary = {
             "Producer": len(prod_set),
@@ -180,4 +181,32 @@ class AppController:
             "Producer & Consumer": len(prod_set & cons_set)
         }
 
+        # Aggiorna le label del Summary
         self.main_window.get_dashboard_view().update_summary(summary)
+
+        # --- Metrics ---
+        metrics_csv = base / "metrics" / f"metrics_{analysis_id}" / "metrics.csv"
+        try:
+            metrics_rows = self.output_reader.load_csv(metrics_csv).rows
+
+            # Calcolo media per ogni colonna numerica
+            cc_values = [float(r[1]) for r in metrics_rows]  # Complexity Cyclomatic
+            mi_values = [float(r[2]) for r in metrics_rows]  # Maintainability Index
+
+            metrics_summary = {
+                "Media Complexity Cyclomatic": round(sum(cc_values)/len(cc_values), 2) if cc_values else 0,
+                "Media Maintainability Index": round(sum(mi_values)/len(mi_values), 2) if mi_values else 0
+            }
+
+            # Aggiorna le label delle metriche
+            self.main_window.get_dashboard_view().update_metrics(metrics_summary)
+
+        except FileNotFoundError:
+            # Se il CSV delle metriche non esiste
+            metrics_summary = {
+                "Media Complexity Cyclomatic": 0,
+                "Media Maintainability Index": 0
+            }
+            self.main_window.get_dashboard_view().update_metrics(metrics_summary)
+        except Exception as e:
+            self.main_window.show_error("Metrics Error", f"Errore nel calcolo delle metriche: {e}")
