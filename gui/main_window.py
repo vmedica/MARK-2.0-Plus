@@ -9,13 +9,15 @@ from ttkbootstrap.constants import *
 from gui.views.config_view import ConfigView
 from gui.views.output_view import OutputView
 from gui.style import PADDING
-
+from gui.views.dashboard_view import DashboardView
 
 class MainWindow:
     """Main application window that composes all views."""
 
     def __init__(self, root: tk.Tk):
         self.root = root
+
+        
 
         # Create notebook for tabs
         self.notebook = ttk.Notebook(root, padding=PADDING["small"])
@@ -24,14 +26,17 @@ class MainWindow:
         # Create tab frames
         self.config_tab = ttk.Frame(self.notebook)
         self.output_tab = ttk.Frame(self.notebook)
+        self.dashboard_tab = ttk.Frame(self.notebook)
 
         # Add tabs to notebook
         self.notebook.add(self.config_tab, text="⚙️ Configuration")
         self.notebook.add(self.output_tab, text="📂 Output")
-
+        self.notebook.add(self.dashboard_tab, text="📊 Dashboard")
+        
         # Create views
         self.config_view = ConfigView(self.config_tab)
         self.output_view = OutputView(self.output_tab)
+        self.dashboard_view = DashboardView(self.dashboard_tab)
 
         # Show all views in their respective tabs
         self.config_view.show()
@@ -68,3 +73,6 @@ class MainWindow:
     def schedule(self, delay_ms: int, callback: Callable) -> str:
         """Schedule a callback to run after a delay."""
         return self.root.after(delay_ms, callback)
+
+    def get_dashboard_view(self):
+        return self.dashboard_view

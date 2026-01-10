@@ -110,3 +110,9 @@ class OutputReader:
             return CSVData(headers=[], rows=[], file_path=file_path)
 
         return CSVData(headers=rows[0], rows=rows[1:], file_path=file_path)
+
+    def find_complete_analyses(self) -> list[str]:
+        producer = {d.name.split("_")[-1] for d in (self.output_path / "producer").iterdir()}
+        consumer = {d.name.split("_")[-1] for d in (self.output_path / "consumer").iterdir()}
+
+        return sorted(producer & consumer)

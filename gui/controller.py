@@ -34,6 +34,11 @@ class AppController:
         output_view.register_callback("on_file_select", self._on_file_select)
         output_view.register_callback("on_refresh", self._refresh_output_tree)
 
+        dashboard_view = self.main_window.get_dashboard_view()
+        dashboard_view.register_callback(
+            "on_analysis_select", self._on_analysis_select
+        )
+
     def _on_start_pipeline(self) -> None:
         """Handle start pipeline request from config view."""
         config_view = self.main_window.get_config_view()
@@ -112,13 +117,20 @@ class AppController:
 
     def _refresh_output_tree(self) -> None:
         """Refresh the output directory tree."""
-        output_view = self.main_window.get_output_view()
+        output_view = self.main_window.get_output_view() 
+        
+        dashboard = self.main_window.get_dashboard_view()
+        analyses = self.output_reader.find_complete_analyses()
+        dashboard.populate_analyses(analyses)
+        
         try:
             tree = self.output_reader.scan_output_tree()
             tree_data = self._convert_tree_to_dict(tree)
             output_view.populate_tree(tree_data)
         except Exception as e:
             output_view.show_error(f"Failed to scan output directory: {e}")
+
+       
 
     def _convert_tree_to_dict(self, tree) -> dict:
         """Convert OutputTree to dictionary format expected by view."""
@@ -148,3 +160,24 @@ class AppController:
             )
         except Exception as e:
             output_view.show_error(str(e))
+    
+
+    def _on_analysis_select(self, analysis_id: str):
+        base = self.output_reader.output_path
+
+        prod_csv = base / "producer" / f"producer_{analysis_id}" / "results.csv"
+        cons_csv = base / "consumer" / f"consumer_{analysis_id}" / "results.csv"
+
+        producer = self.output_reader.load_csv(prod_csv).rows
+        consumer = self.output_reader.load_csv(cons_csv).rows
+
+        prod_set = {r[0] for r in producer}
+        cons_set = {r[0] for r in consumer}
+
+        summary = {
+            "Producer": len(prod_set),
+            "Consumer": len(cons_set),
+            "Producer & Consumer": len(prod_set & cons_set)
+        }
+
+        self.main_window.get_dashboard_view().update_summary(summary)
