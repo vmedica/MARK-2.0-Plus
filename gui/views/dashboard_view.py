@@ -47,6 +47,23 @@ class DashboardView:
         # --- Libraries ---
         self.libs_frame = ttk.LabelFrame(self.right_panel, text="ML Libraries", padding=10)
         self.libs_frame.grid(row=2, column=0, sticky="nsew")
+        
+        self.libs_frame.columnconfigure(0, weight=1)
+        self.libs_tree = ttk.Treeview(
+            self.libs_frame, 
+            columns=("library", "count"), 
+            show="headings",
+            height=10)
+        
+        self.libs_tree.heading("library", text="Library")
+        self.libs_tree.heading("count", text="Total Usage")
+
+        self.libs_tree.grid(row=0, column=0, sticky="nsew")
+
+        # Scrollbar
+        scrollbar = ttk.Scrollbar(self.libs_frame, orient="vertical", command=self.libs_tree.yview)
+        self.libs_tree.configure(yscroll=scrollbar.set)
+        scrollbar.grid(row=0, column=1, sticky="ns")
 
     # --- Callbacks ---
     def register_callback(self, name: str, fn: Callable):
@@ -75,3 +92,14 @@ class DashboardView:
         sel = self.tree.selection()
         if sel and "on_analysis_select" in self.callbacks:
             self.callbacks["on_analysis_select"](sel[0])
+
+    # --- Update Libraries ---
+    def update_library(self, data: Dict[str, int]):
+        # Clear table
+        for row in self.libs_tree.get_children():
+            self.libs_tree.delete(row)
+
+        # Data is already top-10 and sorted by usage (descending)
+        for lib, count in data.items():
+            self.libs_tree.insert("", "end", values=(lib, count))
+

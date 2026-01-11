@@ -3,6 +3,7 @@
 import threading
 from pathlib import Path
 from typing import Optional
+from collections import Counter
 
 from gui.services.pipeline_service import (
     PipelineService,
@@ -165,7 +166,7 @@ class AppController:
     def _on_analysis_select(self, analysis_id: str):
         base = self.output_reader.output_path
 
-        # --- Producer / Consumer ---
+        # --- Number of Producer / Consumer ---
         prod_csv = base / "producer" / f"producer_{analysis_id}" / "results.csv"
         cons_csv = base / "consumer" / f"consumer_{analysis_id}" / "results.csv"
 
@@ -210,3 +211,23 @@ class AppController:
             self.main_window.get_dashboard_view().update_metrics(metrics_summary)
         except Exception as e:
             self.main_window.show_error("Metrics Error", f"Errore nel calcolo delle metriche: {e}")
+
+        # --- Libraries ---
+        prod_csv = base / "producer" / f"producer_{analysis_id}" / "results.csv"
+        cons_csv = base / "consumer" / f"consumer_{analysis_id}" / "results.csv"
+
+        producer_rows = self.output_reader.load_csv(prod_csv).rows
+        consumer_rows = self.output_reader.load_csv(cons_csv).rows
+
+        producer_libs = [r[2] for r in producer_rows]
+        consumer_libs = [r[2] for r in consumer_rows]
+
+        producer_count = Counter(producer_libs)
+        consumer_count = Counter(consumer_libs)
+
+        tot_library_usage = producer_count + consumer_count
+
+        #Sort the libraries by decreasing value and then take only the first 10 
+        top10 = dict(sorted(tot_library_usage.items(), key=lambda x: (-x[1], x[0]))[:10])
+        self.main_window.get_dashboard_view().update_library(top10)
+
