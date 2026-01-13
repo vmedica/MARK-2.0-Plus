@@ -39,6 +39,7 @@ class AppController:
         dashboard_view.register_callback(
             "on_analysis_select", self._on_analysis_select
         )
+        dashboard_view.register_callback("on_refresh", self._refresh_output_tree)
 
     def _on_start_pipeline(self) -> None:
         """Handle start pipeline request from config view."""
@@ -170,11 +171,19 @@ class AppController:
         prod_csv = base / "producer" / f"producer_{analysis_id}" / "results.csv"
         cons_csv = base / "consumer" / f"consumer_{analysis_id}" / "results.csv"
 
-        producer_rows = self.output_reader.load_csv(prod_csv).rows
-        consumer_rows = self.output_reader.load_csv(cons_csv).rows
+        # Load CSV files, use empty lists if files don't exist
+        try:
+            producer_rows = self.output_reader.load_csv(prod_csv).rows
+        except FileNotFoundError:
+            producer_rows = []
+        
+        try:
+            consumer_rows = self.output_reader.load_csv(cons_csv).rows
+        except FileNotFoundError:
+            consumer_rows = []
 
-        prod_set = {r[0] for r in producer_rows}
-        cons_set = {r[0] for r in consumer_rows}
+        prod_set = {r[0] for r in producer_rows if len(r) > 0}
+        cons_set = {r[0] for r in consumer_rows if len(r) > 0}
 
         summary = {
             "Producer": len(prod_set),
@@ -191,8 +200,8 @@ class AppController:
             metrics_rows = self.output_reader.load_csv(metrics_csv).rows
 
             # Calcolo media per ogni colonna numerica
-            cc_values = [float(r[1]) for r in metrics_rows]  # Complexity Cyclomatic
-            mi_values = [float(r[2]) for r in metrics_rows]  # Maintainability Index
+            cc_values = [float(r[1]) for r in metrics_rows if len(r) > 2]  # Complexity Cyclomatic
+            mi_values = [float(r[2]) for r in metrics_rows if len(r) > 2]  # Maintainability Index
 
             metrics_summary = {
                 "Media Complexity Cyclomatic": round(sum(cc_values)/len(cc_values), 2) if cc_values else 0,
@@ -213,12 +222,6 @@ class AppController:
             self.main_window.show_error("Metrics Error", f"Errore nel calcolo delle metriche: {e}")
 
         # --- Keywords ---
-        prod_csv = base / "producer" / f"producer_{analysis_id}" / "results.csv"
-        cons_csv = base / "consumer" / f"consumer_{analysis_id}" / "results.csv"
-
-        producer_rows = self.output_reader.load_csv(prod_csv).rows
-        consumer_rows = self.output_reader.load_csv(cons_csv).rows
-
         # Extract (library, keyword) pairs from both producer and consumer
         # CSV columns: ProjectName(0), Is ML(1), libraries(2), where(3), keyword(4), line_number(5)
         keyword_pairs = []

@@ -13,11 +13,30 @@ class DashboardView:
 
         self.container.columnconfigure(0, weight=1)
         self.container.columnconfigure(1, weight=3)
+        self.container.rowconfigure(0, weight=1)
 
-        # LEFT – analysis list
-        self.tree = ttk.Treeview(self.container, show="tree")
-        self.tree.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
+        # LEFT – analysis list with scrollbar
+        self.left_frame = ttk.Frame(self.container)
+        self.left_frame.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
+        self.left_frame.rowconfigure(1, weight=1)
+        self.left_frame.columnconfigure(0, weight=1)
+
+        # Header with title and refresh button
+        self.tree_header = ttk.Frame(self.left_frame)
+        self.tree_header.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(0, 5))
+        
+        ttk.Label(self.tree_header, text="Output analysis", font=("Segoe UI", 12, "bold")).pack(side="left")
+        self.refresh_btn = ttk.Button(self.tree_header, text="↻ Refresh", width=10)
+        self.refresh_btn.pack(side="right")
+
+        self.tree = ttk.Treeview(self.left_frame, show="tree")
+        self.tree.grid(row=1, column=0, sticky="nsew")
         self.tree.bind("<<TreeviewSelect>>", self._on_select)
+
+        # Scrollbar for analysis list
+        self.tree_scrollbar = ttk.Scrollbar(self.left_frame, orient="vertical", command=self.tree.yview)
+        self.tree.configure(yscrollcommand=self.tree_scrollbar.set)
+        self.tree_scrollbar.grid(row=1, column=1, sticky="ns")
 
         # RIGHT – main panel
         self.right_panel = ttk.Frame(self.container)
@@ -73,6 +92,14 @@ class DashboardView:
     # --- Callbacks ---
     def register_callback(self, name: str, fn: Callable):
         self.callbacks[name] = fn
+        # Bind refresh button when callback is registered
+        if name == "on_refresh":
+            self.refresh_btn.configure(command=self._on_refresh_click)
+
+    def _on_refresh_click(self):
+        """Handle refresh button click."""
+        if "on_refresh" in self.callbacks:
+            self.callbacks["on_refresh"]()
 
     # --- Popola la lista di analisi ---
     def populate_analyses(self, analysis_ids):
