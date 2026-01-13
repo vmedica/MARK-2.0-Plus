@@ -44,19 +44,24 @@ class DashboardView:
             lbl.pack(anchor="w", pady=4)
             self.metrics_labels[key] = lbl
 
-        # --- Libraries ---
-        self.libs_frame = ttk.LabelFrame(self.right_panel, text="ML Libraries", padding=10)
+        # --- Keywords ---
+        self.libs_frame = ttk.LabelFrame(self.right_panel, text="ML Keywords Usage", padding=10)
         self.libs_frame.grid(row=2, column=0, sticky="nsew")
         
         self.libs_frame.columnconfigure(0, weight=1)
         self.libs_tree = ttk.Treeview(
             self.libs_frame, 
-            columns=("library", "count"), 
+            columns=("library", "keyword", "occurrences"), 
             show="headings",
             height=10)
         
         self.libs_tree.heading("library", text="Library")
-        self.libs_tree.heading("count", text="Total Usage")
+        self.libs_tree.heading("keyword", text="Keyword")
+        self.libs_tree.heading("occurrences", text="Occurrences")
+        
+        self.libs_tree.column("library", width=120)
+        self.libs_tree.column("keyword", width=150)
+        self.libs_tree.column("occurrences", width=80, anchor="center")
 
         self.libs_tree.grid(row=0, column=0, sticky="nsew")
 
@@ -93,13 +98,18 @@ class DashboardView:
         if sel and "on_analysis_select" in self.callbacks:
             self.callbacks["on_analysis_select"](sel[0])
 
-    # --- Update Libraries ---
-    def update_library(self, data: Dict[str, int]):
+    # --- Update Keywords ---
+    def update_library(self, data: list):
+        """Update the keywords table.
+        
+        Args:
+            data: List of tuples (library, keyword, occurrences) sorted by occurrences descending
+        """
         # Clear table
         for row in self.libs_tree.get_children():
             self.libs_tree.delete(row)
 
-        # Data is already top-10 and sorted by usage (descending)
-        for lib, count in data.items():
-            self.libs_tree.insert("", "end", values=(lib, count))
+        # Data is already sorted by occurrences (descending)
+        for library, keyword, occurrences in data:
+            self.libs_tree.insert("", "end", values=(library, keyword, occurrences))
 

@@ -212,22 +212,30 @@ class AppController:
         except Exception as e:
             self.main_window.show_error("Metrics Error", f"Errore nel calcolo delle metriche: {e}")
 
-        # --- Libraries ---
+        # --- Keywords ---
         prod_csv = base / "producer" / f"producer_{analysis_id}" / "results.csv"
         cons_csv = base / "consumer" / f"consumer_{analysis_id}" / "results.csv"
 
         producer_rows = self.output_reader.load_csv(prod_csv).rows
         consumer_rows = self.output_reader.load_csv(cons_csv).rows
 
-        producer_libs = [r[2] for r in producer_rows]
-        consumer_libs = [r[2] for r in consumer_rows]
+        # Extract (library, keyword) pairs from both producer and consumer
+        # CSV columns: ProjectName(0), Is ML(1), libraries(2), where(3), keyword(4), line_number(5)
+        keyword_pairs = []
+        for r in producer_rows:
+            if len(r) > 4:
+                keyword_pairs.append((r[2], r[4]))  # (library, keyword)
+        for r in consumer_rows:
+            if len(r) > 4:
+                keyword_pairs.append((r[2], r[4]))  # (library, keyword)
 
-        producer_count = Counter(producer_libs)
-        consumer_count = Counter(consumer_libs)
+        # Count occurrences of each (library, keyword) pair
+        keyword_count = Counter(keyword_pairs)
 
-        tot_library_usage = producer_count + consumer_count
-
-        #Sort the libraries by decreasing value and then take only the first 10 
-        top10 = dict(sorted(tot_library_usage.items(), key=lambda x: (-x[1], x[0]))[:10])
-        self.main_window.get_dashboard_view().update_library(top10)
+        # Sort by occurrences (descending) and take top 10
+        top10_keywords = sorted(keyword_count.items(), key=lambda x: (-x[1], x[0][0], x[0][1]))[:10]
+        
+        # Convert to list of tuples (library, keyword, occurrences)
+        keyword_data = [(lib, kw, count) for (lib, kw), count in top10_keywords]
+        self.main_window.get_dashboard_view().update_library(keyword_data)
 
