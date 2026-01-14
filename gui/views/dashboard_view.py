@@ -73,9 +73,19 @@ class DashboardView:
         def _on_frame_configure(event):
             self.right_canvas.configure(scrollregion=self.right_canvas.bbox("all"))
             # Update window width to match canvas
-            self.right_canvas.itemconfig(self.right_window, width=self.right_canvas.winfo_width())
+            canvas_width = self.right_canvas.winfo_width()
+            if canvas_width > 1:  # Avoid setting width to 1 during initialization
+                self.right_canvas.itemconfig(self.right_window, width=canvas_width)
         
         self.right_panel.bind("<Configure>", _on_frame_configure)
+        
+        # Update canvas window width when canvas is resized
+        def _on_canvas_configure(event):
+            canvas_width = event.width
+            if canvas_width > 1:
+                self.right_canvas.itemconfig(self.right_window, width=canvas_width)
+        
+        self.right_canvas.bind("<Configure>", _on_canvas_configure)
         
         # --- Default message frame (shown when no analysis is selected) ---
         self.default_message_frame = ttk.Frame(self.right_panel)
