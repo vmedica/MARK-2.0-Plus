@@ -241,14 +241,26 @@ class DashboardView:
 
     # --- Show/Hide Content ---
     def show_default_message(self):
-        """Show default 'No analysis selected' message and hide analysis content."""
+        """Show default 'No analysis selected' message and hide analysis content. Disables canvas scrolling."""
         self.analysis_frame.grid_remove()
         self.default_message_frame.grid(row=0, column=0, sticky="nsew")
+        # Disabilita lo scroll del canvas
+        self.right_canvas.unbind_all("<MouseWheel>")
+        self.right_canvas.configure(yscrollcommand=None, xscrollcommand=None)
+        self.right_scrollbar_v.configure(command=None)
+        self.right_scrollbar_h.configure(command=None)
     
     def show_analysis_content(self):
-        """Show analysis content and hide default message."""
+        """Show analysis content and hide default message. Enables canvas scrolling."""
         self.default_message_frame.grid_remove()
         self.analysis_frame.grid(row=0, column=0, sticky="nsew")
+        # Riabilita lo scroll del canvas
+        def _on_mousewheel(event):
+            self.right_canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        self.right_canvas.bind_all("<MouseWheel>", _on_mousewheel)
+        self.right_canvas.configure(yscrollcommand=self.right_scrollbar_v.set, xscrollcommand=self.right_scrollbar_h.set)
+        self.right_scrollbar_v.configure(command=self.right_canvas.yview)
+        self.right_scrollbar_h.configure(command=self.right_canvas.xview)
     
     # --- Update Keywords ---
     def update_library(self, data: list):

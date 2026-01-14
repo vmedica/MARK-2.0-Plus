@@ -9,7 +9,7 @@ from gui.services.output_reader import OutputReader
 
 
 APP_TITLE = "MARK 2.0 Plus - ML Automated Rule-Based Classification Kit"
-APP_SIZE = (1200, 800)
+APP_SIZE = (1550, 800)
 DEFAULT_IO_PATH = Path("./io")
 
 

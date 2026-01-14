@@ -22,7 +22,7 @@ def apply_style(root) -> None:
     style.configure("Treeview.Heading", font=FONTS["heading"])
 
 
-def create_themed_window(title: str, size: tuple = (1200, 800)):
+def create_themed_window(title: str, size: tuple = (1550, 800)):
     """Create a themed root window."""
     root = ttk.Window(themename=DEFAULT_THEME)
 
