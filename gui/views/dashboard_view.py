@@ -76,8 +76,27 @@ class DashboardView:
             self.right_canvas.itemconfig(self.right_window, width=self.right_canvas.winfo_width())
         
         self.right_panel.bind("<Configure>", _on_frame_configure)
+        
+        # --- Default message frame (shown when no analysis is selected) ---
+        self.default_message_frame = ttk.Frame(self.right_panel)
+        self.default_message_frame.grid(row=0, column=0, sticky="nsew")
+        self.default_message_frame.columnconfigure(0, weight=1)
+        self.default_message_frame.rowconfigure(0, weight=1)
+        
+        default_label = ttk.Label(
+            self.default_message_frame,
+            text="No analysis selected",
+            font=("Segoe UI", 14),
+            foreground="gray"
+        )
+        default_label.grid(row=0, column=0)
+        
+        # --- Analysis content frame (hidden by default) ---
+        self.analysis_frame = ttk.Frame(self.right_panel)
+        self.analysis_frame.columnconfigure(0, weight=1)
+        
         # --- Summary ---
-        self.summary = ttk.LabelFrame(self.right_panel, text="Classification Summary", padding=10)
+        self.summary = ttk.LabelFrame(self.analysis_frame, text="Classification Summary", padding=10)
         self.summary.grid(row=0, column=0, sticky="nsew", pady=(0, 10))
         
         self.summary.columnconfigure(0, weight=1)
@@ -104,7 +123,7 @@ class DashboardView:
         self.summary_fig.patch.set_facecolor('#f8f9fa')
 
         # --- Metrics ---
-        self.metrics_frame = ttk.LabelFrame(self.right_panel, text="Code Metrics", padding=10)
+        self.metrics_frame = ttk.LabelFrame(self.analysis_frame, text="Code Metrics", padding=10)
         self.metrics_frame.grid(row=1, column=0, sticky="nsew", pady=(0, 10))
 
         self.metrics_labels = {}
@@ -114,7 +133,7 @@ class DashboardView:
             self.metrics_labels[key] = lbl
 
         # --- Keywords ---
-        self.libs_frame = ttk.LabelFrame(self.right_panel, text="ML Keywords Usage", padding=10)
+        self.libs_frame = ttk.LabelFrame(self.analysis_frame, text="ML Keywords Usage", padding=10)
         self.libs_frame.grid(row=2, column=0, sticky="nsew")
         
         self.libs_frame.columnconfigure(0, weight=1)
@@ -190,8 +209,21 @@ class DashboardView:
     def _on_select(self, _):
         sel = self.tree.selection()
         if sel and "on_analysis_select" in self.callbacks:
+            # Show analysis frame and hide default message
+            self.show_analysis_content()
             self.callbacks["on_analysis_select"](sel[0])
 
+    # --- Show/Hide Content ---
+    def show_default_message(self):
+        """Show default 'No analysis selected' message and hide analysis content."""
+        self.analysis_frame.grid_remove()
+        self.default_message_frame.grid(row=0, column=0, sticky="nsew")
+    
+    def show_analysis_content(self):
+        """Show analysis content and hide default message."""
+        self.default_message_frame.grid_remove()
+        self.analysis_frame.grid(row=0, column=0, sticky="nsew")
+    
     # --- Update Keywords ---
     def update_library(self, data: list):
         """Update the keywords table.

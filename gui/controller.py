@@ -124,6 +124,8 @@ class AppController:
         dashboard = self.main_window.get_dashboard_view()
         analyses = self.output_reader.find_complete_analyses()
         dashboard.populate_analyses(analyses)
+        # Reset dashboard to show default message
+        dashboard.show_default_message()
         
         try:
             tree = self.output_reader.scan_output_tree()
