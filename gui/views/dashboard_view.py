@@ -50,18 +50,20 @@ class DashboardView:
         right_container.columnconfigure(0, weight=1)
         right_container.rowconfigure(0, weight=1)
         
-        # Create canvas and scrollbar
+        # Create canvas and scrollbars (vertical and horizontal)
         self.right_canvas = tk.Canvas(right_container, highlightthickness=0, bg='white')
-        self.right_scrollbar = ttk.Scrollbar(right_container, orient="vertical", command=self.right_canvas.yview)
-        self.right_canvas.configure(yscrollcommand=self.right_scrollbar.set)
+        self.right_scrollbar_v = ttk.Scrollbar(right_container, orient="vertical", command=self.right_canvas.yview)
+        self.right_scrollbar_h = ttk.Scrollbar(right_container, orient="horizontal", command=self.right_canvas.xview)
+        self.right_canvas.configure(yscrollcommand=self.right_scrollbar_v.set, xscrollcommand=self.right_scrollbar_h.set)
         
         self.right_canvas.grid(row=0, column=0, sticky="nsew")
-        self.right_scrollbar.grid(row=0, column=1, sticky="ns")
+        self.right_scrollbar_v.grid(row=0, column=1, sticky="ns")
+        self.right_scrollbar_h.grid(row=1, column=0, sticky="ew")
         
-        # Create frame inside canvas
+        # Create frame inside canvas with minimum width
         self.right_panel = ttk.Frame(self.right_canvas)
         self.right_window = self.right_canvas.create_window(0, 0, window=self.right_panel, anchor="nw")
-        self.right_panel.columnconfigure(0, weight=1)
+        self.right_panel.columnconfigure(0, weight=1, minsize=800)  # Set minimum width
         
         # Bind canvas scroll
         def _on_mousewheel(event):
@@ -72,18 +74,25 @@ class DashboardView:
         # Update scroll region
         def _on_frame_configure(event):
             self.right_canvas.configure(scrollregion=self.right_canvas.bbox("all"))
-            # Update window width to match canvas
+            # Only update width if canvas is wider than minimum content width
             canvas_width = self.right_canvas.winfo_width()
-            if canvas_width > 1:  # Avoid setting width to 1 during initialization
+            content_width = self.right_panel.winfo_reqwidth()
+            if canvas_width > 1 and canvas_width >= content_width:
                 self.right_canvas.itemconfig(self.right_window, width=canvas_width)
+            else:
+                self.right_canvas.itemconfig(self.right_window, width=max(800, content_width))
         
         self.right_panel.bind("<Configure>", _on_frame_configure)
         
         # Update canvas window width when canvas is resized
         def _on_canvas_configure(event):
             canvas_width = event.width
+            content_width = self.right_panel.winfo_reqwidth()
             if canvas_width > 1:
-                self.right_canvas.itemconfig(self.right_window, width=canvas_width)
+                if canvas_width >= content_width:
+                    self.right_canvas.itemconfig(self.right_window, width=canvas_width)
+                else:
+                    self.right_canvas.itemconfig(self.right_window, width=max(800, content_width))
         
         self.right_canvas.bind("<Configure>", _on_canvas_configure)
         
@@ -107,30 +116,36 @@ class DashboardView:
         
         # --- Summary ---
         self.summary = ttk.LabelFrame(self.analysis_frame, text="Classification Summary", padding=10)
-        self.summary.grid(row=0, column=0, sticky="nsew", pady=(0, 10))
-        
+        self.summary.grid(row=0, column=0, sticky="ew", pady=(0, 10))
+
+        # entrambe le colonne espandibili
         self.summary.columnconfigure(0, weight=1)
         self.summary.columnconfigure(1, weight=1)
-        
-        # Left: Labels
+
+        # Labels on top
         self.summary_labels_frame = ttk.Frame(self.summary)
-        self.summary_labels_frame.grid(row=0, column=0, sticky="nsew", padx=5)
-        
+        self.summary_labels_frame.grid(row=0, column=0, sticky="w", padx=5, pady=(0, 10))
+
         self.summary_labels = {}
         for key in ("Producer", "Consumer", "Producer & Consumer"):
             lbl = ttk.Label(self.summary_labels_frame, text=f"{key}: 0", font=("Segoe UI", 11))
             lbl.pack(anchor="w", pady=4)
             self.summary_labels[key] = lbl
-        
-        # Right: Pie Chart
+
+        # Pie Chart
         self.summary_chart_frame = ttk.Frame(self.summary)
         self.summary_chart_frame.grid(row=0, column=1, sticky="nsew", padx=5)
-        
-        self.summary_fig = Figure(figsize=(3, 3), dpi=80)
+
+        self.summary_fig = Figure(figsize=(4, 4), dpi=80)
         self.summary_ax = self.summary_fig.add_subplot(111)
         self.summary_canvas = FigureCanvasTkAgg(self.summary_fig, self.summary_chart_frame)
-        self.summary_canvas.get_tk_widget().pack(fill="both", expand=True)
-        self.summary_fig.patch.set_facecolor('#f8f9fa')
+
+        widget = self.summary_canvas.get_tk_widget()
+        widget.configure(width=320, height=320)
+        widget.pack(expand=True, fill="both")
+
+        self.summary_fig.patch.set_facecolor("#ffffff")
+
 
         # --- Metrics ---
         self.metrics_frame = ttk.LabelFrame(self.analysis_frame, text="Code Metrics", padding=10)
@@ -161,8 +176,8 @@ class DashboardView:
         self.libs_tree.heading("keyword", text="Keyword")
         self.libs_tree.heading("occurrences", text="Occurrences")
         
-        self.libs_tree.column("library", width=120)
-        self.libs_tree.column("keyword", width=150)
+        self.libs_tree.column("library", width=120, anchor="center")
+        self.libs_tree.column("keyword", width=150, anchor="center")
         self.libs_tree.column("occurrences", width=80, anchor="center")
 
         self.libs_tree.grid(row=0, column=0, sticky="nsew")
@@ -174,15 +189,16 @@ class DashboardView:
         
         # Bar Chart
         self.keywords_chart_frame = ttk.Frame(self.libs_frame)
-        self.keywords_chart_frame.grid(row=1, column=0, columnspan=2, sticky="nsew", pady=(10, 0))
+        self.keywords_chart_frame.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(10, 0))
         
         self.keywords_fig = Figure(figsize=(10, 5), dpi=80)
         self.keywords_ax = self.keywords_fig.add_subplot(111)
         self.keywords_canvas = FigureCanvasTkAgg(self.keywords_fig, self.keywords_chart_frame)
-        self.keywords_canvas.get_tk_widget().pack(fill="both", expand=True)
-        self.keywords_fig.patch.set_facecolor('#f8f9fa')
+        self.keywords_canvas.get_tk_widget().configure(width=800, height=400)  # Fixed size
+        self.keywords_canvas.get_tk_widget().pack()
+        self.keywords_fig.patch.set_facecolor("#ffffff")
 
-    # --- Callbacks ---
+    # --- Callbacks --- 
     def register_callback(self, name: str, fn: Callable):
         self.callbacks[name] = fn
         # Bind refresh button when callback is registered
