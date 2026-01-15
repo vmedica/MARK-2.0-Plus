@@ -12,3 +12,6 @@ io/repos/
 
 #Venv settings
 venv
+
+#Pycharm settings
+.idea
