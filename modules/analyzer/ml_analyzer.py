@@ -212,6 +212,40 @@ class MLAnalyzer(ABC):
                     if total_sloc > 0 else 0
                 )
 
+                # Log calculation details
+                logger.info("=" * 70)
+                logger.info("METRICS CALCULATION FOR PROJECT: %s", project)
+                logger.info("=" * 70)
+                
+                # CC calculation details
+                if project_cc:
+                    logger.info("CC Calculation:")
+                    logger.info("  Individual CC values: %s", project_cc)
+                    logger.info("  Sum of CC: %d", sum(project_cc))
+                    logger.info("  Number of blocks: %d", len(project_cc))
+                    logger.info("  CC_avg = sum(%s) / %d = %f", project_cc, len(project_cc), cc_avg)
+                else:
+                    logger.info("CC Calculation: No code blocks found -> CC_avg = 0")
+                
+                # MI calculation details
+                logger.info("MI Calculation:")
+                logger.info("  Total SLOC (Source Lines of Code): %d", total_sloc)
+                if project_mi:
+                    logger.info("  MI values with SLOC weights: %s", project_mi)
+                    weighted_sum = sum(mi * sloc for mi, sloc in project_mi)
+                    logger.info("  Weighted sum (MI * SLOC): %f", weighted_sum)
+                    logger.info("  MI_avg = weighted_sum / total_sloc = %f / %d = %f", 
+                                weighted_sum, total_sloc, mi_avg)
+                else:
+                    logger.info("MI Calculation: No files analyzed -> MI_avg = 0")
+                
+                # Final values
+                logger.info("-" * 70)
+                logger.info("FINAL METRICS FOR PROJECT: %s", project)
+                logger.info("  CC_avg (rounded): %.2f", cc_avg)
+                logger.info("  MI_avg (rounded): %.2f", mi_avg)
+                logger.info("=" * 70)
+
                 self.project_metrics.append({
                     "ProjectName": project,
                     "CC_avg": round(cc_avg, 2),
