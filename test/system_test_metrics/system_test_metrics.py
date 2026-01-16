@@ -1,4 +1,7 @@
-"""Black-box system testing for MARK 2.0 metrics function using CLI interface.
+#For execution, use the command: pytest -vv -s .\test\system_test_metrics\system_test_metrics.py
+
+"""
+Black-box system testing for MARK 2.0 metrics function using CLI interface.
 Running with the command: pytest -v
 
 Test Cases:
@@ -219,7 +222,7 @@ class TestMetricsBlackBox:
 
         # Verify that for each project MI = 0 and CC = 0
         for project_name, metrics in calculated_metrics.items():
-            #print(f"[DEBUG] {project_name} -> {metrics}")
+            ##print(f"[DEBUG] {project_name} -> {metrics}")
             assert metrics["MI_avg"] == 0, (
                 f"Project '{project_name}' expected MI_avg = 0, "
                 f"got {metrics['MI_avg']}"
@@ -263,7 +266,7 @@ class TestMetricsBlackBox:
 
         # Verify that for each project MI = 0 and CC = 0
         for project_name, metrics in calculated_metrics.items():    
-            #print(f"[DEBUG] {project_name} -> {metrics}")
+            ##print(f"[DEBUG] {project_name} -> {metrics}")
             assert metrics["MI_avg"] == 0, (
                 f"Project '{project_name}' with empty Python files expected MI_avg = 0, "
                 f"got {metrics['MI_avg']}"
@@ -320,7 +323,7 @@ class TestMetricsBlackBox:
 
         # Verify exact values for each project
         for project_name, metrics in calculated_metrics.items():
-            print(f"[DEBUG] {project_name} -> {metrics}")
+            #print(f"[DEBUG] {project_name} -> {metrics}")
 
             if project_name in expected_metrics:
                 expected = expected_metrics[project_name]
@@ -370,10 +373,19 @@ class TestMetricsBlackBox:
 
         # Oracle: Expected exact values calculated manually (see docstring for details)
         expected_metrics = {
-            "project_empty_python": {
+            "project_empty_python_1": {
                 "CC_avg": 0,  # They do not contain python files and default is 0
                 "MI_avg": 0  # They do not contain python files and default is 0
 
+            },
+            "project_empty_python_2": {
+                "CC_avg": 0,  # They do not contain python files and default is 0
+                "MI_avg": 0  # They do not contain python files and default is 0
+
+            },
+            "project_no_python_1": {
+                "CC_avg": 0,  # They do not contain python files and default is 0
+                "MI_avg": 0  # They do not contain python files and default is 0
             },
             "project_no_python": {
                 "CC_avg": 0,  # They do not contain python files and default is 0
@@ -392,7 +404,7 @@ class TestMetricsBlackBox:
 
         # Verify exact values for each project
         for project_name, metrics in calculated_metrics.items():
-            print(f"[DEBUG] {project_name} -> {metrics}")
+            #print(f"[DEBUG] {project_name} -> {metrics}")
 
             if project_name in expected_metrics:
                 expected = expected_metrics[project_name]
