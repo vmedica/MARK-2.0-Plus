@@ -373,22 +373,22 @@ class TestMetricsBlackBox:
         # Oracle: Expected exact values calculated manually (see docstring for details)
         expected_metrics = {
             "project_empty_python_1": {
-                "CC_avg": 0,  # They do not contain python files and default is 0
-                "MI_avg": 0  # They do not contain python files and default is 0
+                "CC_avg": 0,  # Empty python files, default is 0
+                "MI_avg": 0  # Empty python files, default is 0
 
             },
             "project_empty_python_2": {
-                "CC_avg": 0,  # They do not contain python files and default is 0
-                "MI_avg": 0  # They do not contain python files and default is 0
+                "CC_avg": 0,  # Empty python files, default is 0
+                "MI_avg": 0  # Empty python files, default is 0
 
             },
             "project_no_python_1": {
-                "CC_avg": 0,  # They do not contain python files and default is 0
-                "MI_avg": 0  # They do not contain python files and default is 0
+                "CC_avg": 0,  # No python files, default is 0
+                "MI_avg": 0  # No python files, default is 0
             },
             "project_no_python": {
-                "CC_avg": 0,  # They do not contain python files and default is 0
-                "MI_avg": 0  # They do not contain python files and default is 0
+                "CC_avg": 0,  # No python files, default is 0
+                "MI_avg": 0  # No python files, default is 0
             },
             "project1": {
                 "CC_avg": 1.67,  # sum([1, 2, 2]) / 3 = 1.6667 -> rounded   # 3 number of blocks
