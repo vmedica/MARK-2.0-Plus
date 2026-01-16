@@ -285,7 +285,7 @@ class TestMetricsBlackBox:
         Test Case ID: TC5
         Input: "test_repos/TC5"
         Environment description: Multiple projects with Python files containing valid code
-        Oracle: Exact CC_avg and MI_avg values calculated manually
+        Oracle: Exact manually calculated CC_avg and MI_avg values below
     """
         test_repos = test_repo_dir / "TC5"
 
@@ -347,8 +347,7 @@ class TestMetricsBlackBox:
         Input: "test_repos/TC6"
         Environment description: Multiple projects with a mix of: no Python files,
                                  empty Python files, and Python files with valid code
-        Oracle: For each project, MI and CC are equal to 0 or > 0,
-                based on the content
+        Oracle: Exact manually calculated CC_avg and MI_avg values below
         """
         test_repos = test_repo_dir / "TC6"
 
