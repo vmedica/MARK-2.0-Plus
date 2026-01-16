@@ -305,35 +305,6 @@ class TestMetricsBlackBox:
             "Expected at least one project to be analyzed"
         )
         
-        """
-        project 1:
-            file a.py:
-                    def f():
-                        return 1
-            file b.py:
-                    def g(x):
-                        if x > 0:
-                            return 5
-                        return x
-
-                    def g(y):
-                        if y < 0:
-                            return 10
-                        return y
-        project 2:
-            file c.py:
-                    def pippo():
-                        return 0        
-                    def pluto():
-                        return 0
-            file d.py:
-                    def my_function(x):     
-                        if x > 0:
-                            return 5    
-                        else:
-                            return 0    
-        """
-
         # Oracle: Expected exact values calculated manually (see docstring for details)
         expected_metrics = {
             "project1": {
@@ -396,50 +367,26 @@ class TestMetricsBlackBox:
         assert len(calculated_metrics) > 0, (
             "Expected at least one project to be analyzed"
         )
-        
-        """
-        project 1:
-            file a.py:
-                    def f():
-                        return 1
-            file b.py:
-                    def g(x):
-                        if x > 0:
-                            return 5
-                        return x
-
-                    def g(y):
-                        if y < 0:
-                            return 10
-                        return y
-        project 2:
-            file c.py:
-                    def pippo():
-                        return 0        
-                    def pluto():
-                        return 0
-            file d.py:
-                    def my_function(x):     
-                        if x > 0:
-                            return 5    
-                        else:
-                            return 0    
-        """
 
         # Oracle: Expected exact values calculated manually (see docstring for details)
         expected_metrics = {
             "project_empty_python": {
-                "CC_avg": 0,  # sum([1, 2, 2]) / 3 = 1.6667 -> rounded   # 3 number of blocks
-                "MI_avg": 0  # (100.00*2 + 71.89*8) / 10 = 77.512 -> rounded #10 number of lines logic (SLOC)
+                "CC_avg": 0,  # They do not contain python files and default is 0
+                "MI_avg": 0  # They do not contain python files and default is 0
 
             },
             "project_no_python": {
-                "CC_avg": 0,  # sum([1, 1, 2]) / 3 = 1.3333 -> rounded  # 3 number of blocks
-                "MI_avg": 0  # (100.00*4 + 79.74*5) / 9 = 88.7444 -> rounded #9 number of lines logic (SLOC)
+                "CC_avg": 0,  # They do not contain python files and default is 0
+                "MI_avg": 0  # They do not contain python files and default is 0
             },
-            "project_valid_python": {
-                "CC_avg": 1.5,  # sum([1, 1, 2]) / 3 = 1.3333 -> rounded  # 3 number of blocks
-                "MI_avg": 82.83
+            "project1": {
+                "CC_avg": 1.67,  # sum([1, 2, 2]) / 3 = 1.6667 -> rounded   # 3 number of blocks
+                "MI_avg": 77.51  # (100.00*2 + 71.89*8) / 10 = 77.512 -> rounded #10 number of lines logic (SLOC)
+
+            },
+            "project2": {
+                "CC_avg": 1.33,  # sum([1, 1, 2]) / 3 = 1.3333 -> rounded  # 3 number of blocks
+                "MI_avg": 88.75  # (100.00*4 + 79.74*5) / 9 = 88.7444 -> rounded #9 number of lines logic (SLOC)
             }
         }
 
