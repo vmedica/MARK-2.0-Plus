@@ -17,6 +17,9 @@ from modules.analyzer.builder.consumer_analyzer_builder import (
 from modules.analyzer.builder.producer_analyzer_builder import (
     ProducerAnalyzerBuilder,
 )  # required import
+from modules.analyzer.builder.metrics_analyzer_builder import (
+    MetricsAnalyzerBuilder,
+)  # required import
 
 logger = get_logger(__name__)
 
@@ -74,6 +77,13 @@ def parse_arguments():
     )
 
     parser.add_argument(
+        "--metrics",
+        action="store_true",
+        default=False,
+        help="Enable code metrics calculation step",
+    )
+
+    parser.add_argument(
         "--merge", action="store_true", default=False, help="Enable results merge step"
     )
 
@@ -107,6 +117,7 @@ def parse_arguments():
         args.clone = True
         args.clone_check = True
         args.analysis = True
+        args.metrics = True
         args.merge = True
         args.result_analysis = True
 
@@ -140,8 +151,8 @@ def validate_paths(args):
         logger.error(f"Project list file not found: {args.project_list}")
         sys.exit(1)
 
-    # For analysis, repository path must exist
-    if args.analysis and not args.repository_path.exists():
+    # For analysis or metrics, repository path must exist
+    if (args.analysis or args.metrics) and not args.repository_path.exists():
         logger.error(f"Repository path does not exist: {args.repository_path}")
         raise FileNotFoundError(f"Input folder not found: {args.repository_path}")
 
@@ -201,6 +212,17 @@ def run_pipeline(args):
         )
         dir_consumer = consumer_facade.run_analysis(rules_3=args.rules_3)
         logger.info(f"Consumer analysis completed. Results in: {dir_consumer}")
+
+    # === ANALISI METRICHE CODICE ===
+    if args.metrics:
+        logger.info("*** INIZIO IL CALCOLO DELLE METRICHE ***")
+        metrics_facade = MLAnalysisFacade(
+            input_path=args.repository_path,
+            io_path=args.io_path,
+            role=AnalyzerRole.METRICS,
+        )
+        dir_metrics = metrics_facade.run_analysis()
+        logger.info(f"Metrics calculation completed. Results in: {dir_metrics}")
 
     # === MERGE DEI RISULTATI ===
     if args.merge:
@@ -271,6 +293,7 @@ def main():
         logger.info(f"  - Clone: {args.clone}")
         logger.info(f"  - Clone Check: {args.clone_check}")
         logger.info(f"  - Analysis: {args.analysis}")
+        logger.info(f"  - Metrics: {args.metrics}")
         logger.info(f"  - Merge: {args.merge}")
         logger.info(f"  - Result Analysis: {args.result_analysis}")
         logger.info("=" * 80)

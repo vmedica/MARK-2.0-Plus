@@ -59,6 +59,11 @@ python main_args.py [opzioni]
 - **Descrizione**: Abilita la fase di analisi ML
 - **Uso**: Esegue l'analisi dei repository per identificare producer e consumer
 
+#### `--metrics`
+
+- **Descrizione**: Abilita la fase di calcolo delle metriche del codice
+- **Uso**: Calcola Maintainability Index (MI) e Cyclomatic Complexity (CC) per tutti i progetti
+
 #### `--merge`
 
 - **Descrizione**: Abilita la fase di merge dei risultati
@@ -72,7 +77,7 @@ python main_args.py [opzioni]
 #### `--all`
 
 - **Descrizione**: Abilita tutte le fasi del pipeline
-- **Uso**: Equivalente a specificare tutte le flag precedenti insieme
+- **Uso**: Equivalente a specificare: `--clone --clone-check --analysis --metrics --merge --result-analysis`
 
 ### Opzioni di analisi
 
@@ -102,11 +107,25 @@ Esegue l'analisi sui repository clonati:
 - **Analisi Producer**: Identifica i progetti che producono librerie ML
 - **Analisi Consumer**: Identifica i progetti che utilizzano librerie ML
 
-### 4. **Merge dei Risultati** (`--merge`)
+### 4. **Calcolo Metriche** (`--metrics`)
+
+Calcola le metriche del codice per tutti i progetti:
+
+- **Maintainability Index (MI)**: Misura la manutenibilità del codice (0-100)
+- **Cyclomatic Complexity (CC)**: Misura la complessità ciclomatica delle funzioni
+
+### 4. **Calcolo Metriche** (`--metrics`)
+
+Calcola le metriche del codice per tutti i progetti:
+
+- **Maintainability Index (MI)**: Misura la manutenibilità del codice (0-100)
+- **Cyclomatic Complexity (CC)**: Misura la complessità ciclomatica delle funzioni
+
+### 5. **Merge dei Risultati** (`--merge`)
 
 Combina i risultati dell'analisi con l'oracle di riferimento per validazione.
 
-### 5. **Analisi Finale** (`--result-analysis`)
+### 6. **Analisi Finale** (`--result-analysis`)
 
 Genera metriche di performance e statistiche sui risultati ottenuti.
 
@@ -134,6 +153,18 @@ python main_args.py --clone --n-repos 10
 
 ```bash
 python main_args.py --analysis
+```
+
+### Calcolare solo le metriche del codice
+
+```bash
+python main_args.py --metrics
+```
+
+### Eseguire analisi ML e calcolo metriche
+
+```bash
+python main_args.py --analysis --metrics
 ```
 
 ### Eseguire analisi e merge
@@ -172,7 +203,8 @@ io/
 │   └── library_dict_producers.csv
 ├── output/                        # Risultati dell'analisi
 │   ├── consumer/
-│   └── producer/
+│   ├── producer/
+│   └── metrics/
 └── repos/                         # Repository clonati
 ```
 
@@ -181,7 +213,8 @@ io/
 I risultati vengono salvati in:
 
 - **Logs di clonazione**: `modules/cloner/log/`
-- **Risultati analisi**: `io/output/consumer/` e `io/output/producer/`
+- **Risultati analisi ML**: `io/output/consumer/` e `io/output/producer/`
+- **Risultati metriche**: `io/output/metrics/`
 - **Risultati matching**: `modules/oracle/matching/`
 
 ## Note
