@@ -1,0 +1,72 @@
+digraph CFG {
+  rankdir=TB;
+  node [shape=box, fontname=Consolas];
+  edge [fontname=Consolas];
+  "EXIT" [label="EXIT"];
+  "ENTRY" [label="ENTRY: analyze_project"];
+  "b1" [label="rows = []
+all_cc_values, mi_weighted, sloc_list = ([], [], [])"];
+  "loop2" [label="for (root, _, files) in os.walk(repo)"];
+  "loop3" [label="for filename in files"];
+  "if4" [label="if not ProjectScanner.is_valid_file(filename, self.filters)"];
+  "b5" [label="continue"];
+  "b6" [label="file_path = os.path.join(root, filename)
+_, keywords, _, cc_blocks, mi_val, sloc_val = self.analyze_single_file(file_path, repo, **kwargs)"];
+  "if7" [label="if self.role in [AnalyzerRole.METRICS]"];
+  "b8" [label="all_cc_values.extend((b.complexity for b in cc_blocks))"];
+  "if9" [label="if sloc_val > 0"];
+  "b10" [label="mi_weighted.append((mi_val, sloc_val))
+sloc_list.append(sloc_val)"];
+  "if11" [label="if keywords"];
+  "loop12" [label="for keyword in keywords"];
+  "b13" [label="rows.append({'ProjectName': f'{project}/{directory}', f'Is ML {self.role_str}': 'Yes', 'libraries': keyword['library'],…"];
+  "b14" [label="df = pd.DataFrame(rows)"];
+  "if15" [label="if not df.empty"];
+  "b16" [label="output_file = os.path.join(output_folder, f'{project}_{directory}_ml_{self.role_str}.csv')
+df.to_csv(output_file, index=False)"];
+  "b17" [label="return (df, all_cc_values, mi_weighted, sloc_list)"];
+  "ENTRY" -> "b1" [color="#4363D8"];
+  "b1" -> "loop2" [color="#4363D8"];
+  "loop2" -> "loop3" [label="T", color="#4363D8"];
+  "loop3" -> "if4" [label="T", color="#4363D8"];
+  "if4" -> "b5" [label="T", color="#4363D8"];
+  "b5" -> "loop3" [color="#4363D8"];
+  "if4" -> "b6" [label="F", color="#4363D8"];
+  "b6" -> "if7" [color="#4363D8"];
+  "if7" -> "b8" [label="T", color="#4363D8"];
+  "b8" -> "if9" [color="#4363D8"];
+  "if9" -> "b10" [label="T", color="#4363D8"];
+  "b10" -> "if11" [color="#4363D8"];
+  "if9" -> "if11" [label="F", color="#4363D8"];
+  "if7" -> "if11" [label="F", color="#E6194B"];
+  "if11" -> "loop12" [label="T", color="#4363D8"];
+  "loop12" -> "b13" [label="T", color="#4363D8"];
+  "b13" -> "loop12" [label="back", color="#4363D8"];
+  "loop12" -> "loop3" [label="back", color="#4363D8"];
+  "if11" -> "loop3" [label="back", color="#4363D8"];
+  "loop3" -> "loop2" [label="back", color="#4363D8"];
+  "loop2" -> "b14" [label="F", color="#4363D8"];
+  "b14" -> "if15" [color="#4363D8"];
+  "if15" -> "b16" [label="T", color="#4363D8"];
+  "b16" -> "b17" [color="#4363D8"];
+  "if15" -> "b17" [label="F", color="#E6194B"];
+  "b17" -> "EXIT" [color="#4363D8"];
+    // --- LEGENDA ---
+  subgraph cluster_legend {
+    label="Legenda";
+    fontname="Consolas";
+    legend [shape=plaintext, fontname="Consolas", label=<
+      <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="6">
+        <TR><TD COLSPAN="2"><B>Colori archi</B></TD></TR>
+        <TR>
+          <TD><FONT COLOR="#4363D8">---</FONT></TD>
+          <TD ALIGN="LEFT">TC1</TD>
+        </TR>
+        <TR>
+          <TD><FONT COLOR="#E6194B">---</FONT></TD>
+          <TD ALIGN="LEFT">TC2</TD>
+        </TR>
+      </TABLE>
+    >];
+  }
+}

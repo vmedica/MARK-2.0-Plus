@@ -5,6 +5,7 @@ common workflow for scanning projects, applying file filters, extracting ML-rela
 libraries/keywords, and exporting results to CSV. Concrete analyzers (e.g., producer
 vs consumer) specialize only the `check_library` method to express role-specific rules.
 """
+
 """
 Abstract base class for ML analyzers handling project scans and keyword detection.
 """
@@ -43,7 +44,6 @@ class MLAnalyzer(ABC):
         self.keyword_strategy = keyword_strategy or DefaultKeywordMatcher()
         self.project_metrics = []
 
-    
     # SAVING CSV METRICS (METRICS ONLY)
     def _save_metrics_csv(self, output_base_path: str):
         if self.role != AnalyzerRole.METRICS:
@@ -52,7 +52,7 @@ class MLAnalyzer(ABC):
         if not self.project_metrics:
             logger.info("No metrics to save")
             return
-        
+
         csv_path = os.path.join(output_base_path, "metrics.csv")
 
         pd.DataFrame(self.project_metrics).to_csv(csv_path, index=False)
@@ -86,11 +86,11 @@ class MLAnalyzer(ABC):
         try:
             cc_blocks = cc_visit(code)
             # Log complexity of each block
-            for block in cc_blocks:
-                logger.info(
-                    "CC block in %s: %s lines, complexity=%d",
-                    file, block.lineno, block.complexity
-                )
+            # for block in cc_blocks:
+            #     logger.info(
+            #         "CC block in %s: %s lines, complexity=%d",
+            #         file, block.lineno, block.complexity
+            #     )
         except Exception as e:
             logger.info(f"Error calculating CC for {file}: {e}")
             cc_blocks = []
@@ -98,7 +98,7 @@ class MLAnalyzer(ABC):
         # --- MI ---
         try:
             mi_val = mi_visit(code, multi=False)
-            logger.info("MI for %s: %.2f", file, mi_val)
+            # logger.info("MI for %s: %.2f", file, mi_val)
         except Exception:
             mi_val = 0
             logger.info("MI calculation failed for %s", file)
@@ -113,12 +113,13 @@ class MLAnalyzer(ABC):
         if keywords:
             logger.info(
                 "Found %s with ML libraries %s and training instruction %s in %s",
-                file, libraries, keywords, repo
+                file,
+                libraries,
+                keywords,
+                repo,
             )
 
         return libraries, keywords, list_load_keywords, cc_blocks, mi_val, sloc_val
-
-
 
     # ANALISI DIRECTORY
     def analyze_project(
@@ -137,7 +138,9 @@ class MLAnalyzer(ABC):
                 file_path = os.path.join(root, filename)
 
                 # ML ANALYSIS AND METRICS
-                _, keywords, _, cc_blocks, mi_val, sloc_val = self.analyze_single_file(file_path, repo, **kwargs)
+                _, keywords, _, cc_blocks, mi_val, sloc_val = self.analyze_single_file(
+                    file_path, repo, **kwargs
+                )
 
                 if self.role in [AnalyzerRole.METRICS]:
                     all_cc_values.extend(b.complexity for b in cc_blocks)
@@ -148,27 +151,27 @@ class MLAnalyzer(ABC):
 
                 if keywords:
                     for keyword in keywords:
-                        rows.append({
-                            "ProjectName": f"{project}/{directory}",
-                            f"Is ML {self.role_str}": "Yes",
-                            "libraries": keyword["library"],
-                            "where": file_path,
-                            "keyword": keyword["keyword"],
-                            "line_number": keyword["line_number"],
-                        })
+                        rows.append(
+                            {
+                                "ProjectName": f"{project}/{directory}",
+                                f"Is ML {self.role_str}": "Yes",
+                                "libraries": keyword["library"],
+                                "where": file_path,
+                                "keyword": keyword["keyword"],
+                                "line_number": keyword["line_number"],
+                            }
+                        )
 
         df = pd.DataFrame(rows)
 
         if not df.empty:
             output_file = os.path.join(
-                output_folder,
-                f"{project}_{directory}_ml_{self.role_str}.csv"
+                output_folder, f"{project}_{directory}_ml_{self.role_str}.csv"
             )
             df.to_csv(output_file, index=False)
 
         return df, all_cc_values, mi_weighted, sloc_list
 
-    
     # PROJECT SET ANALYSIS
     def analyze_projects_set(self, input_folder, output_folder, **kwargs):
         all_rows = []
@@ -186,13 +189,9 @@ class MLAnalyzer(ABC):
                     continue
 
                 logger.info("Project: %s", project)
-                
+
                 df, cc_vals, mi_vals, sloc_vals = self.analyze_project(
-                    full_dir_path,
-                    project,
-                    dir_path,
-                    output_folder,
-                    **kwargs
+                    full_dir_path, project, dir_path, output_folder, **kwargs
                 )
 
                 if self.role == AnalyzerRole.METRICS:
@@ -209,14 +208,17 @@ class MLAnalyzer(ABC):
                 total_sloc = sum(project_sloc)
                 mi_avg = (
                     sum(mi * sloc for mi, sloc in project_mi) / total_sloc
-                    if total_sloc > 0 else 0
+                    if total_sloc > 0
+                    else 0
                 )
 
-                self.project_metrics.append({
-                    "ProjectName": project,
-                    "CC_avg": round(cc_avg, 2),
-                    "MI_avg": round(mi_avg, 2),
-                })
+                self.project_metrics.append(
+                    {
+                        "ProjectName": project,
+                        "CC_avg": round(cc_avg, 2),
+                        "MI_avg": round(mi_avg, 2),
+                    }
+                )
 
         final_df = pd.DataFrame(all_rows)
         if not final_df.empty:

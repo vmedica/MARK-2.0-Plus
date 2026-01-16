@@ -1,0 +1,82 @@
+digraph CFG {
+  rankdir=TB;
+  node [shape=box, fontname=Consolas];
+  edge [fontname=Consolas];
+  "EXIT" [label="EXIT"];
+  "ENTRY" [label="ENTRY: analyze_single_file"];
+  "if1" [label="if not os.path.isfile(file)"];
+  "b2" [label="return ([], [], [], [], 0, 0)"];
+  "b3" [label="libraries, keywords, list_load_keywords = self.check_library(file, **kwargs)"];
+  "try4" [label="try"];
+  "b5" [label="with open(file, 'r', encoding='utf-8') as f:     code = f.read()"];
+  "b6" [label="logger.info(f'Cannot read file {file}: {e}')
+return (libraries, keywords, list_load_keywords, [], 0, 0)"];
+  "try7" [label="try"];
+  "b8" [label="cc_blocks = cc_visit(code)"];
+  "b9" [label="logger.info(f'Error calculating CC for {file}: {e}')
+cc_blocks = []"];
+  "try10" [label="try"];
+  "b11" [label="mi_val = mi_visit(code, multi=False)"];
+  "b12" [label="mi_val = 0
+logger.info('MI calculation failed for %s', file)"];
+  "b13" [label="sloc_val = 0"];
+  "loop14" [label="for line in code.splitlines()"];
+  "if15" [label="if line.strip() and (not line.strip().startswith('#'))"];
+  "b16" [label="sloc_val += 1"];
+  "if17" [label="if keywords"];
+  "b18" [label="logger.info('Found %s with ML libraries %s and training instruction %s in %s', file, libraries, keywords, repo)"];
+  "b19" [label="return (libraries, keywords, list_load_keywords, cc_blocks, mi_val, sloc_val)"];
+  "ENTRY" -> "if1" [color="#4363D8"];
+  "if1" -> "b2" [label="T", color="#4363D8"];
+  "b2" -> "EXIT" [color="#4363D8"];
+  "if1" -> "b3" [label="F", color="#E6194B"];
+  "b3" -> "try4" [color="#E6194B"];
+  "try4" -> "b5" [label="try", color="#F58231"];
+  "try4" -> "b6" [label="except Exception as e", color="#E6194B"];
+  "b6" -> "EXIT" [color="#E6194B"];
+  "b5" -> "try7" [color="#F58231"];
+  "try7" -> "b8" [label="try", color="#3CB44B"];
+  "try7" -> "b9" [label="except Exception as e", color="#F58231"];
+  "b8" -> "try10" [color="#3CB44B"];
+  "b9" -> "try10" [color="#F58231"];
+  "try10" -> "b11" [label="try", color="#3CB44B"];
+  "try10" -> "b12" [label="except Exception", color="#F58231"];
+  "b11" -> "b13" [color="#3CB44B"];
+  "b12" -> "b13"[color="#F58231"];
+  "b13" -> "loop14" [color="#F58231"];
+  "loop14" -> "if15" [label="T", color="#F58231"];
+  "if15" -> "b16" [label="T", color="#F58231"];
+  "b16" -> "loop14" [label="back", color="#F58231"];
+  "if15" -> "loop14" [label="back", color="#F58231"];
+  "loop14" -> "if17" [label="F", color="#F58231"];
+  "if17" -> "b18" [label="T", color="#F58231"];
+  "b18" -> "b19" [color="#F58231"];
+  "if17" -> "b19" [label="F", color="#3CB44B"];
+  "b19" -> "EXIT" [color="#F58231"];
+  // --- LEGENDA ---
+  subgraph cluster_legend {
+    label="Legenda";
+    fontname="Consolas";
+    legend [shape=plaintext, fontname="Consolas", label=<
+      <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="6">
+        <TR><TD COLSPAN="2"><B>Colori archi</B></TD></TR>
+        <TR>
+          <TD><FONT COLOR="#4363D8">---</FONT></TD>
+          <TD ALIGN="LEFT">TC1</TD>
+        </TR>
+        <TR>
+          <TD><FONT COLOR="#E6194B">---</FONT></TD>
+          <TD ALIGN="LEFT">TC2</TD>
+        </TR>
+        <TR>
+          <TD><FONT COLOR="#F58231">---</FONT></TD>
+          <TD ALIGN="LEFT">TC3</TD>
+        </TR>
+        <TR>
+          <TD><FONT COLOR="#3CB44B">---</FONT></TD>
+          <TD ALIGN="LEFT">TC4</TD>
+        </TR>
+      </TABLE>
+    >];
+  }
+}

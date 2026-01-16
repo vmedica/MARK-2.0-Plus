@@ -204,6 +204,10 @@ def test_analyze_project_metrics_mixed_files(monkeypatch, to_csv_spy):
     assert mi_weighted == [(50.0, 10)]
     assert sloc_list == [10]
 
+    # df non vuoto -> to_csv chiamato
+    assert not df.empty
+    assert any(os.path.basename(p) == "P_D_ml_metrics.csv" for p in to_csv_spy)
+
 
 def test_analyze_project_non_metrics_df_empty(monkeypatch, to_csv_spy):
     analyzer = DummyAnalyzer(role=AnalyzerRole.PRODUCER)

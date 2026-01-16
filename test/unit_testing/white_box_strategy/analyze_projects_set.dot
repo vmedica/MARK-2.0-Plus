@@ -1,0 +1,83 @@
+digraph CFG {
+  rankdir=TB;
+  node [shape=box, fontname=Consolas];
+  edge [fontname=Consolas];
+  "EXIT" [label="EXIT"];
+  "ENTRY" [label="ENTRY: analyze_projects_set"];
+  "b1" [label="all_rows = []"];
+  "loop2" [label="for project in os.listdir(input_folder)"];
+  "b3" [label="project_path = os.path.join(input_folder, project)"];
+  "if4" [label="if not os.path.isdir(project_path)"];
+  "b5" [label="continue"];
+  "b6" [label="project_cc, project_mi, project_sloc = ([], [], [])"];
+  "loop7" [label="for dir_path in os.listdir(project_path)"];
+  "b8" [label="full_dir_path = os.path.join(project_path, dir_path)"];
+  "if9" [label="if not os.path.isdir(full_dir_path)"];
+  "b10" [label="continue"];
+  "b11" [label="logger.info('Project: %s', project)
+df, cc_vals, mi_vals, sloc_vals = self.analyze_project(full_dir_path, project, dir_path, output_folder, **kwargs)"];
+  "if12" [label="if self.role == AnalyzerRole.METRICS"];
+  "b13" [label="project_cc.extend(cc_vals)
+project_mi.extend(mi_vals)
+project_sloc.extend(sloc_vals)"];
+  "if14" [label="if not df.empty"];
+  "b15" [label="all_rows.extend(df.to_dict(orient='records'))"];
+  "if16" [label="if self.role == AnalyzerRole.METRICS"];
+  "b17" [label="cc_avg = sum(project_cc) / len(project_cc) if project_cc else 0
+total_sloc = sum(project_sloc)
+mi_avg = sum((mi * sloc for mi, sloc in project_mi)) / total_sloc if total_sloc > 0 else 0
+self.project_metrics.append({'ProjectName': project, 'CC_avg': round(cc_avg, 2), 'MI_avg': round(mi_avg, 2)})"];
+  "b18" [label="final_df = pd.DataFrame(all_rows)"];
+  "if19" [label="if not final_df.empty"];
+  "b20" [label="final_df.to_csv(os.path.join(output_folder, 'results.csv'), index=False)"];
+  "b21" [label="self._save_metrics_csv(output_folder)
+return final_df"];
+  "ENTRY" -> "b1" [color="#4363D8"];
+  "b1" -> "loop2" [color="#4363D8"];
+  "loop2" -> "b3" [label="T", color="#4363D8"];
+  "b3" -> "if4" [color="#4363D8"];
+  "if4" -> "b5" [label="T", color="#4363D8"];
+  "b5" -> "loop2" [color="#4363D8"];
+  "if4" -> "b6" [label="F", color="#4363D8"];
+  "b6" -> "loop7" [color="#4363D8"];
+  "loop7" -> "b8" [label="T", color="#4363D8"];
+  "b8" -> "if9" [color="#4363D8"];
+  "if9" -> "b10" [label="T", color="#4363D8"];
+  "b10" -> "loop7" [color="#4363D8"];
+  "if9" -> "b11" [label="F", color="#4363D8"];
+  "b11" -> "if12" [color="#4363D8"];
+  "if12" -> "b13" [label="T", color="#E6194B"];
+  "b13" -> "if14" [color="#E6194B"];
+  "if12" -> "if14" [label="F", color="#4363D8"];
+  "if14" -> "b15" [label="T", color="#4363D8"];
+  "b15" -> "loop7" [label="back", color="#4363D8"];
+  "if14" -> "loop7" [label="back", color="#E6194B"];
+  "loop7" -> "if16" [label="F", color="#4363D8"];
+  "if16" -> "b17" [label="T", color="#E6194B"];
+  "b17" -> "loop2" [label="back", color="#E6194B"];
+  "if16" -> "loop2" [label="back", color="#4363D8"];
+  "loop2" -> "b18" [label="F", color="#4363D8"];
+  "b18" -> "if19" [color="#4363D8"];
+  "if19" -> "b20" [label="T", color="#4363D8"];
+  "b20" -> "b21" [color="#4363D8"];
+  "if19" -> "b21" [label="F", color="#E6194B"];
+  "b21" -> "EXIT" [color="#4363D8"];
+  // --- LEGENDA ---
+  subgraph cluster_legend {
+    label="Legenda";
+    fontname="Consolas";
+    legend [shape=plaintext, fontname="Consolas", label=<
+      <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="6">
+        <TR><TD COLSPAN="2"><B>Colori archi</B></TD></TR>
+        <TR>
+          <TD><FONT COLOR="#4363D8">---</FONT></TD>
+          <TD ALIGN="LEFT">TC1</TD>
+        </TR>
+        <TR>
+          <TD><FONT COLOR="#E6194B">---</FONT></TD>
+          <TD ALIGN="LEFT">TC2</TD>
+        </TR>
+      </TABLE>
+    >];
+  }
+}

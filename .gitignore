@@ -15,3 +15,6 @@ venv
 
 #Pycharm settings
 .idea
+
+#Output vari
+*.md
