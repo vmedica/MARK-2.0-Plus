@@ -21,6 +21,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 import shutil
 import csv
+import gc
+import time
 
 
 # ============================================================================
@@ -84,11 +86,39 @@ def create_csv_with_rows(temp_csv_file):
 
 @pytest.fixture
 def tk_root():
-    """Create a Tk root window for testing."""
-    root = tk.Tk()
-    root.withdraw()  # Hide the window during tests
+    """Create a Tk root window for testing.
+    
+    Include robust cleanup to avoid Tcl/Tk resource issues on Windows.
+    """
+    
+    # Force garbage collection before creating new Tk instance
+    gc.collect()
+    
+    # Small delay to ensure previous Tk resources are fully released
+    time.sleep(0.05)
+    
+    try:
+        root = tk.Tk()
+        root.withdraw()  # Hide the window during tests
+    except Exception as e:
+        # Retry once after cleanup if initial creation fails
+        gc.collect()
+        time.sleep(0.1)
+        root = tk.Tk()
+        root.withdraw()
+    
     yield root
-    root.destroy()
+    
+    # Robust cleanup
+    try:
+        root.quit()
+        root.update_idletasks()
+        root.destroy()
+    except Exception:
+        pass
+    
+    # Force garbage collection after destroying Tk
+    gc.collect()
 
 
 @pytest.fixture
