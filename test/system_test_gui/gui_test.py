@@ -192,7 +192,16 @@ class TestGUISystemTestFrames:
 
         ID: TF1
         Combinazione: ST0
-        Oracolo: [Error] nessuno step selezionato
+        Oracolo: [Success] Pipeline completata (nessuna operazione eseguita)
+        
+        INPUT:
+        - Step selezionati: NESSUNO (run_cloner=False, run_cloner_check=False,
+                            run_producer=False, run_consumer=False, run_metrics=False)
+        - IO directory: temp_io_structure (directory temporanea valida)
+        - Repo directory: temp_io_structure/repos (creata nel test)
+        
+        OUTPUT ATTESO:
+        - Messaggio: "Success" / "Pipeline completed successfully!"
         """
 
         config_view = gui_components['config_view']
@@ -283,8 +292,13 @@ class TestGUISystemTestFrames:
         Combinazione: ST1 + CV1 + IO0
         Oracolo: [Error] IO directory mancante
         
-        Descrizione: Verifica che la GUI mostri un errore quando
-        la directory IO specificata non esiste.
+        INPUT:
+        - Step selezionati: Cloning + Verify (run_cloner=True, run_cloner_check=True)
+        - IO directory: tmp_path/nonexistent_io_directory (NON ESISTE)
+        - Repo directory: non configurata (irrilevante, IO fallisce prima)
+        
+        OUTPUT ATTESO:
+        - Errore: "Invalid Path" / "IO path does not exist: {path}"
         """
         config_view = gui_components['config_view']
         main_window = gui_components['main_window']
@@ -374,8 +388,16 @@ class TestGUISystemTestFrames:
         Combinazione: ST1 + CV1 + IO1 + RP0
         Oracolo: [Single] repo directory non esiste, viene creata, pipeline success
         
-        Descrizione: Verifica che quando la directory repo non esiste,
-        il cloner la crei automaticamente e la pipeline completi con successo.
+        INPUT:
+        - Step selezionati: Cloning + Verify (run_cloner=True, run_cloner_check=True)
+        - IO directory: temp_io_structure (directory temporanea ESISTENTE)
+        - Repo directory: tmp_path/test_repos (NON ESISTE, verrà creata)
+        - CSV file: temp_io_structure/test_projects.csv (1 riga di test)
+        - N-repos: 1
+        
+        OUTPUT ATTESO:
+        - Directory repo creata automaticamente
+        - Messaggio: "Success" / "Pipeline completed successfully!"
         """
         config_view = gui_components['config_view']
         main_window = gui_components['main_window']
@@ -506,8 +528,20 @@ class TestGUISystemTestFrames:
         Combinazione: ST1 + CV1 + IO1 + RP1 + CSV0
         Oracolo: [Error] CSV mancante (richiesto perché CV1)
         
-        Descrizione: Verifica che la GUI mostri un errore quando il file CSV
-        dei progetti non esiste, ma Cloning+Verify sono selezionati.
+        INPUT:
+        - Step selezionati: Cloning + Verify 
+            * run_cloner = True
+            * run_cloner_check = True  
+            * run_producer = False
+            * run_consumer = False
+            * run_metrics = False
+        - IO directory: temp_io_structure (es: C:/temp/pytest-xxx/io) - ESISTE
+        - Repo directory: temp_io_structure/repos - ESISTE
+        - CSV file: tmp_path/nonexistent_projects.csv - NON ESISTE
+        
+        OUTPUT ATTESO:
+        - Errore: "Pipeline Failed" 
+        - Messaggio: "Error: [Errno 2] No such file or directory: 'nonexistent_projects.csv'"
         """
         config_view = gui_components['config_view']
         main_window = gui_components['main_window']
@@ -554,6 +588,11 @@ class TestGUISystemTestFrames:
             # Azione: Avvia la pipeline
             controller._on_start_pipeline()
             
+            # Aspetta che il thread della pipeline finisca (se è stato avviato)
+            if controller._pipeline_thread:
+                controller._pipeline_thread.join(timeout=5)
+                controller._on_pipeline_complete()
+            
             # Oracolo: Deve essere mostrato un errore per CSV mancante
             debug(f"\n[DEBUG] TF4 - Errori catturati: {error_shown}")
             
@@ -563,15 +602,34 @@ class TestGUISystemTestFrames:
             
             error_title, error_msg = error_shown[0]
             
-            debug(f"  Titolo errore: '{error_title}'")
-            debug(f"  Messaggio errore: '{error_msg}'")
+            # Valori attesi: FileNotFoundError per CSV inesistente
+            expected_title = "Pipeline Failed"
+            # Il messaggio deve contenere FileNotFoundError e il nome del file CSV
+            csv_filename = nonexistent_csv.name
             
-            # Verifica che l'errore sia relativo al CSV
-            assert "path" in error_title.lower() or "csv" in error_title.lower() or "invalid" in error_title.lower(), (
-                f"TF4 FALLITO: Titolo errore non relativo a path/CSV: {error_title}"
+            debug(f"  Titolo atteso: '{expected_title}'")
+            debug(f"  Titolo ottenuto: '{error_title}'")
+            debug(f"  Messaggio ottenuto: '{error_msg}'")
+            
+            assert error_title == expected_title, (
+                f"TF4 FALLITO: Titolo errore inatteso.\n"
+                f"  Atteso: '{expected_title}'\n"
+                f"  Ottenuto: '{error_title}'"
+            )
+            
+            # Verifica che il messaggio contenga FileNotFoundError e il nome del CSV
+            # Verifica che il messaggio indichi che il CSV non esiste
+            assert (
+                "Error: [Errno 2] No such file or directory:" in error_msg
+                and csv_filename in error_msg
+            ), (
+                f"TF4 FALLITO: Messaggio errore non indica CSV mancante.\n"
+                f"Ottenuto: '{error_msg}'"
             )
             
             debug(f"\nTF4 PASSED: Errore CSV mancante correttamente mostrato")
+            debug(f"  - Titolo: {error_title}")
+            debug(f"  - Messaggio: {error_msg}")
             
         finally:
             main_window.show_error = original_show_error
@@ -587,8 +645,20 @@ class TestGUISystemTestFrames:
         Combinazione: ST1 + CV1 + IO1 + RP1 + CSV1 + CS0 + RU3_0
         Oracolo: [Single] Analisi completata con successo
         
-        Descrizione: Verifica che con CSV vuoto e Regola3 disattivata,
-        la pipeline completi con successo.
+        INPUT:
+        - Step selezionati: Cloning + Verify
+            * run_cloner = True
+            * run_cloner_check = True
+            * run_producer = False
+            * run_consumer = False
+            * run_metrics = False
+        - IO directory: temp_io_structure - ESISTE
+        - Repo directory: temp_io_structure/repos - ESISTE
+        - CSV file: temp_io_structure/empty_projects.csv - ESISTE, VUOTO (solo header)
+        - Regola 3: False (RU3_0)
+        
+        OUTPUT ATTESO:
+        - Messaggio: "Success" / "Pipeline completed successfully!"
         """
         config_view = gui_components['config_view']
         main_window = gui_components['main_window']
@@ -660,18 +730,30 @@ class TestGUISystemTestFrames:
             main_window.show_info = original_show_info
 
     # ========================================================================
-    # TF5b: ST1 + CV1 + IO1 + RP1 + CSV1 + CS0 + RU3_1 - CSV vuoto, Regola3 ON
+    # TF6: ST1 + CV1 + IO1 + RP1 + CSV1 + CS0 + RU3_1 - CSV vuoto, Regola3 ON
     # ========================================================================
-    def test_TF5b_csv_empty_rule3_on(self, gui_components, temp_io_structure):
+    def test_TF6_csv_empty_rule3_on(self, gui_components, temp_io_structure):
         """
-        TF5b: ST1 + CV1 + IO1 + RP1 + CSV1 + CS0 + RU3_1
+        TF6: ST1 + CV1 + IO1 + RP1 + CSV1 + CS0 + RU3_1
         
-        ID: TF5b
+        ID: TF6
         Combinazione: ST1 + CV1 + IO1 + RP1 + CSV1 + CS0 + RU3_1
         Oracolo: [Single] Analisi completata con successo
         
-        Descrizione: Verifica che con CSV vuoto e Regola3 attivata,
-        la pipeline completi con successo.
+        INPUT:
+        - Step selezionati: Cloning + Verify
+            * run_cloner = True
+            * run_cloner_check = True
+            * run_producer = False
+            * run_consumer = False
+            * run_metrics = False
+        - IO directory: temp_io_structure - ESISTE
+        - Repo directory: temp_io_structure/repos - ESISTE
+        - CSV file: temp_io_structure/empty_projects2.csv - ESISTE, VUOTO (solo header)
+        - Regola 3: True (RU3_1)
+        
+        OUTPUT ATTESO:
+        - Messaggio: "Success" / "Pipeline completed successfully!"
         """
         config_view = gui_components['config_view']
         main_window = gui_components['main_window']
@@ -698,7 +780,7 @@ class TestGUISystemTestFrames:
         # Setup RU3_1: Regola 3 attivata
         config_view.rules_3_var.set(True)
         
-        debug(f"\n[DEBUG] TF5b - Pre-condizioni:")
+        debug(f"\n[DEBUG] TF6 - Pre-condizioni:")
         debug(f"  RU3_1 (Regola3 ON): {config_view.rules_3_var.get()}")
         
         info_shown = []
@@ -724,28 +806,37 @@ class TestGUISystemTestFrames:
                 for title, msg in info_shown
             )
             
-            debug(f"\n[DEBUG] TF5b - Messaggi info: {info_shown}")
+            debug(f"\n[DEBUG] TF6 - Messaggi info: {info_shown}")
             
-            assert success_shown, f"TF5b FALLITO: Messaggio successo NON mostrato."
+            assert success_shown, f"TF6 FALLITO: Messaggio successo NON mostrato."
             
-            debug(f"\nTF5b PASSED: Analisi completata con CSV vuoto e Regola3 ON")
+            debug(f"\nTF6 PASSED: Analisi completata con CSV vuoto e Regola3 ON")
             
         finally:
             main_window.show_info = original_show_info
 
     # ========================================================================
-    # TF6: ST1 + CV1 + IO1 + RP1 + CSV1 + CS1 + N1 - N-repos negativo
+    # TF7: ST1 + CV1 + IO1 + RP1 + CSV1 + CS1 + N1 - N-repos negativo
     # ========================================================================
-    def test_TF6_n_repos_negative(self, gui_components, temp_io_structure):
+    def test_TF7_n_repos_negative(self, gui_components, temp_io_structure):
         """
-        TF6: ST1 + CV1 + IO1 + RP1 + CSV1 + CS1 + N1
+        TF7: ST1 + CV1 + IO1 + RP1 + CSV1 + CS1 + N1
         
-        ID: TF6
+        ID: TF7
         Combinazione: ST1 + CV1 + IO1 + RP1 + CSV1 + CS1 + N1
         Oracolo: [Error] N-repos < 0
         
-        Descrizione: Verifica che la GUI gestisca correttamente un valore
-        negativo per N-repos.
+        INPUT:
+        - Step selezionati: Cloning + Verify
+            * run_cloner = True
+            * run_cloner_check = True
+        - IO directory: temp_io_structure - ESISTE
+        - Repo directory: temp_io_structure/repos - ESISTE
+        - CSV file: temp_io_structure/projects_TF7.csv - ESISTE, 2 righe dati
+        - N-repos: -1 (valore negativo)
+        
+        OUTPUT ATTESO:
+        - Configurazione accetta n_repos < 0 (test boundary)
         """
         config_view = gui_components['config_view']
         main_window = gui_components['main_window']
@@ -763,7 +854,7 @@ class TestGUISystemTestFrames:
         config_view.repo_path_var.set(str(repo_path))
         
         # Setup CSV1 + CS1: CSV con dati
-        csv_path = temp_io_structure / "projects_tf6.csv"
+        csv_path = temp_io_structure / "projects_TF7.csv"
         with open(csv_path, 'w', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
             writer.writerow(['owner', 'project_name', 'url'])
@@ -774,7 +865,7 @@ class TestGUISystemTestFrames:
         # Setup N1: N-repos < 0
         config_view.n_repos_var.set(-1)
         
-        debug(f"\n[DEBUG] TF6 - Pre-condizioni:")
+        debug(f"\n[DEBUG] TF7 - Pre-condizioni:")
         debug(f"  CS1 (CSV non vuoto): True")
         debug(f"  N1 (N-repos < 0): {config_view.n_repos_var.get()}")
         
@@ -782,24 +873,34 @@ class TestGUISystemTestFrames:
         config = config_view.get_config_values()
         
         assert config['n_repos'] < 0, (
-            f"TF6 FALLITO: n_repos dovrebbe essere negativo.\n"
+            f"TF7 FALLITO: n_repos dovrebbe essere negativo.\n"
             f"Valore: {config['n_repos']}"
         )
         
-        debug(f"\nTF6 PASSED: n_repos negativo correttamente configurato ({config['n_repos']})")
+        debug(f"\nTF7 PASSED: n_repos negativo correttamente configurato ({config['n_repos']})")
 
     # ========================================================================
-    # TF7: ST1 + CV1 + IO1 + RP1 + CSV1 + CS1 + N2 - N-repos = 0
+    # TF8: ST1 + CV1 + IO1 + RP1 + CSV1 + CS1 + N2 - N-repos = 0
     # ========================================================================
     def test_TF7_n_repos_zero(self, gui_components, temp_io_structure):
         """
-        TF7: ST1 + CV1 + IO1 + RP1 + CSV1 + CS1 + N2
+        TF8: ST1 + CV1 + IO1 + RP1 + CSV1 + CS1 + N2
         
-        ID: TF7
+        ID: TF8
         Combinazione: ST1 + CV1 + IO1 + RP1 + CSV1 + CS1 + N2
         Oracolo: [Error] N-repos = 0
         
-        Descrizione: Verifica che la GUI gestisca correttamente N-repos = 0.
+        INPUT:
+        - Step selezionati: Cloning + Verify
+            * run_cloner = True
+            * run_cloner_check = True
+        - IO directory: temp_io_structure - ESISTE
+        - Repo directory: temp_io_structure/repos - ESISTE
+        - CSV file: temp_io_structure/projects_TF8.csv - ESISTE, 1 riga dati
+        - N-repos: 0
+        
+        OUTPUT ATTESO:
+        - Configurazione accetta n_repos = 0 (test boundary)
         """
         config_view = gui_components['config_view']
         
@@ -815,7 +916,7 @@ class TestGUISystemTestFrames:
         config_view.repo_path_var.set(str(repo_path))
         
         # Setup CSV1 + CS1
-        csv_path = temp_io_structure / "projects_tf7.csv"
+        csv_path = temp_io_structure / "projects_TF8.csv"
         with open(csv_path, 'w', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
             writer.writerow(['owner', 'project_name', 'url'])
@@ -825,31 +926,40 @@ class TestGUISystemTestFrames:
         # Setup N2: N-repos = 0
         config_view.n_repos_var.set(0)
         
-        debug(f"\n[DEBUG] TF7 - Pre-condizioni:")
+        debug(f"\n[DEBUG] TF8 - Pre-condizioni:")
         debug(f"  N2 (N-repos = 0): {config_view.n_repos_var.get()}")
         
         config = config_view.get_config_values()
         
         assert config['n_repos'] == 0, (
-            f"TF7 FALLITO: n_repos dovrebbe essere 0.\n"
+            f"TF8 FALLITO: n_repos dovrebbe essere 0.\n"
             f"Valore: {config['n_repos']}"
         )
         
-        debug(f"\nTF7 PASSED: n_repos = 0 correttamente configurato")
+        debug(f"\nTF8 PASSED: n_repos = 0 correttamente configurato")
 
     # ========================================================================
-    # TF8a: ST1 + CV1 + IO1 + RP1 + CSV1 + CS1 + N3 - N-repos valido
+    # TF9: ST1 + CV1 + IO1 + RP1 + CSV1 + CS1 + N3 - N-repos valido
     # ========================================================================
-    def test_TF8a_n_repos_valid(self, gui_components, temp_io_structure):
+    def test_TF9_n_repos_valid(self, gui_components, temp_io_structure):
         """
-        TF8a: ST1 + CV1 + IO1 + RP1 + CSV1 + CS1 + N3
+        TF9: ST1 + CV1 + IO1 + RP1 + CSV1 + CS1 + N3
         
-        ID: TF8a
+        ID: TF9
         Combinazione: ST1 + CV1 + IO1 + RP1 + CSV1 + CS1 + N3
         Oracolo: 0 < N-repos < #righeProgettoCSV - Pipeline success
         
-        Descrizione: Verifica che con N-repos valido (inferiore al numero
-        di righe nel CSV) la pipeline completi con successo.
+        INPUT:
+        - Step selezionati: Cloning + Verify
+            * run_cloner = True
+            * run_cloner_check = True
+        - IO directory: temp_io_structure - ESISTE
+        - Repo directory: temp_io_structure/repos - ESISTE
+        - CSV file: temp_io_structure/projects_TF9.csv - ESISTE, 5 righe dati
+        - N-repos: 3 (0 < 3 < 5)
+        
+        OUTPUT ATTESO:
+        - Messaggio: "Success" / "Pipeline completed successfully!"
         """
         config_view = gui_components['config_view']
         main_window = gui_components['main_window']
@@ -867,7 +977,7 @@ class TestGUISystemTestFrames:
         config_view.repo_path_var.set(str(repo_path))
         
         # Setup CSV1 + CS1: CSV con 5 righe di dati
-        csv_path = temp_io_structure / "projects_tf8a.csv"
+        csv_path = temp_io_structure / "projects_TF9.csv"
         with open(csv_path, 'w', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
             writer.writerow(['owner', 'project_name', 'url'])
@@ -879,7 +989,7 @@ class TestGUISystemTestFrames:
         n_repos_value = 3
         config_view.n_repos_var.set(n_repos_value)
         
-        debug(f"\n[DEBUG] TF8a - Pre-condizioni:")
+        debug(f"\n[DEBUG] TF9 - Pre-condizioni:")
         debug(f"  CS1 (CSV con 5 righe): True")
         debug(f"  N3 (0 < N-repos < 5): {config_view.n_repos_var.get()}")
         
@@ -906,28 +1016,38 @@ class TestGUISystemTestFrames:
                 for title, msg in info_shown
             )
             
-            debug(f"\n[DEBUG] TF8a - Messaggi: {info_shown}")
+            debug(f"\n[DEBUG] TF9 - Messaggi: {info_shown}")
             
-            assert success_shown, f"TF8a FALLITO: Pipeline non completata con successo."
+            assert success_shown, f"TF9 FALLITO: Pipeline non completata con successo."
             
-            debug(f"\nTF8a PASSED: N-repos valido ({n_repos_value}) - Pipeline success")
+            debug(f"\nTF9 PASSED: N-repos valido ({n_repos_value}) - Pipeline success")
             
         finally:
             main_window.show_info = original_show_info
 
     # ========================================================================
-    # TF8b: ST1 + CV1 + IO1 + RP1 + CSV1 + CS1 + N4 - N-repos > #righe
+    # TF10: ST1 + CV1 + IO1 + RP1 + CSV1 + CS1 + N4 - N-repos > #righe
     # ========================================================================
-    def test_TF8b_n_repos_exceeds_rows(self, gui_components, temp_io_structure):
+    def test_TF10_n_repos_exceeds_rows(self, gui_components, temp_io_structure):
         """
-        TF8b: ST1 + CV1 + IO1 + RP1 + CSV1 + CS1 + N4
+        TF10: ST1 + CV1 + IO1 + RP1 + CSV1 + CS1 + N4
         
-        ID: TF8b
+        ID: TF10
         Combinazione: ST1 + CV1 + IO1 + RP1 + CSV1 + CS1 + N4
         Oracolo: [Single] N-repos > #righeProgettoCSV - Pipeline success
         
-        Descrizione: Verifica che quando N-repos supera il numero di righe
-        nel CSV, la pipeline completa comunque con successo (usa tutte le righe).
+        INPUT:
+        - Step selezionati: Cloning + Verify
+            * run_cloner = True
+            * run_cloner_check = True
+        - IO directory: temp_io_structure - ESISTE
+        - Repo directory: temp_io_structure/repos - ESISTE
+        - CSV file: temp_io_structure/projects_TF10.csv - ESISTE, 3 righe dati
+        - N-repos: 100 (100 > 3)
+        
+        OUTPUT ATTESO:
+        - Messaggio: "Success" / "Pipeline completed successfully!"
+        - Pipeline usa tutte le righe disponibili (3)
         """
         config_view = gui_components['config_view']
         main_window = gui_components['main_window']
@@ -945,7 +1065,7 @@ class TestGUISystemTestFrames:
         config_view.repo_path_var.set(str(repo_path))
         
         # Setup CSV1 + CS1: CSV con 3 righe
-        csv_path = temp_io_structure / "projects_tf8b.csv"
+        csv_path = temp_io_structure / "projects_TF10.csv"
         num_csv_rows = 3
         with open(csv_path, 'w', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
@@ -958,7 +1078,7 @@ class TestGUISystemTestFrames:
         n_repos_value = 100
         config_view.n_repos_var.set(n_repos_value)
         
-        debug(f"\n[DEBUG] TF8b - Pre-condizioni:")
+        debug(f"\n[DEBUG] TF10 - Pre-condizioni:")
         debug(f"  CS1 (CSV con {num_csv_rows} righe): True")
         debug(f"  N4 (N-repos > {num_csv_rows}): {config_view.n_repos_var.get()}")
         
@@ -985,28 +1105,39 @@ class TestGUISystemTestFrames:
                 for title, msg in info_shown
             )
             
-            debug(f"\n[DEBUG] TF8b - Messaggi: {info_shown}")
+            debug(f"\n[DEBUG] TF10 - Messaggi: {info_shown}")
             
-            assert success_shown, f"TF8b FALLITO: Pipeline non completata."
+            assert success_shown, f"TF10 FALLITO: Pipeline non completata."
             
-            debug(f"\nTF8b PASSED: N-repos ({n_repos_value}) > righe CSV ({num_csv_rows}) - Pipeline success")
+            debug(f"\nTF10 PASSED: N-repos ({n_repos_value}) > righe CSV ({num_csv_rows}) - Pipeline success")
             
         finally:
             main_window.show_info = original_show_info
 
     # ========================================================================
-    # TF9: ST1 + CV2 + IO1 + RP1 - Cloning/Verify non selezionati
+    # TF11: ST1 + CV2 + IO1 + RP1 - Cloning/Verify non selezionati
     # ========================================================================
-    def test_TF9_no_cloning_verify(self, gui_components, temp_io_structure):
+    def test_TF11_no_cloning_verify(self, gui_components, temp_io_structure):
         """
-        TF9: ST1 + CV2 + IO1 + RP1
+        TF11: ST1 + CV2 + IO1 + RP1
         
-        ID: TF9
+        ID: TF11
         Combinazione: ST1 + CV2 + IO1 + RP1
         Oracolo: Analisi completata con successo
         
-        Descrizione: Verifica che senza Cloning+Verify selezionati,
-        la pipeline possa completare con successo (altri step attivi).
+        INPUT:
+        - Step selezionati: Solo Producer (NO Cloning, NO Verify)
+            * run_cloner = False
+            * run_cloner_check = False
+            * run_producer = True
+            * run_consumer = False
+            * run_metrics = False
+        - IO directory: temp_io_structure - ESISTE
+        - Repo directory: temp_io_structure/repos - ESISTE
+        
+        OUTPUT ATTESO:
+        - Messaggio: "Success" / "Pipeline completed successfully!"
+        - CSV non richiesto perché Cloning/Verify non selezionati
         """
         config_view = gui_components['config_view']
         main_window = gui_components['main_window']
@@ -1031,7 +1162,7 @@ class TestGUISystemTestFrames:
         repo_path.mkdir(exist_ok=True)
         config_view.repo_path_var.set(str(repo_path))
         
-        debug(f"\n[DEBUG] TF9 - Pre-condizioni:")
+        debug(f"\n[DEBUG] TF11 - Pre-condizioni:")
         debug(f"  ST1 (almeno uno step): {any_step_selected(config_view)}")
         debug(f"  CV2 (NO Cloning+Verify): {not cloning_verify_selected(config_view)}")
         debug(f"  IO1 (IO esiste): {temp_io_structure.exists()}")
@@ -1060,11 +1191,11 @@ class TestGUISystemTestFrames:
                 for title, msg in info_shown
             )
             
-            debug(f"\n[DEBUG] TF9 - Messaggi: {info_shown}")
+            debug(f"\n[DEBUG] TF11 - Messaggi: {info_shown}")
             
-            assert success_shown, f"TF9 FALLITO: Pipeline non completata."
+            assert success_shown, f"TF11 FALLITO: Pipeline non completata."
             
-            debug(f"\nTF9 PASSED: Senza Cloning+Verify, pipeline completata con successo")
+            debug(f"\nTF11 PASSED: Senza Cloning+Verify, pipeline completata con successo")
             
         finally:
             main_window.show_info = original_show_info
@@ -1072,16 +1203,29 @@ class TestGUISystemTestFrames:
     # ========================================================================
     # TF10: ST2 + CV1 + IO1 + RP1 + CSV1 + CS1 + N3 - Tutti gli step
     # ========================================================================
-    def test_TF10_all_steps(self, gui_components, temp_io_structure):
+    def test_TF12_all_steps(self, gui_components, temp_io_structure):
         """
-        TF10: ST2 + CV1 + IO1 + RP1 + CSV1 + CS1 + N3
+        TF12: ST2 + CV1 + IO1 + RP1 + CSV1 + CS1 + N3
         
-        ID: TF10
+        ID: TF12
         Combinazione: ST2 + CV1 + IO1 + RP1 + CSV1 + CS1 + N3
         Oracolo: [Single] Tutti gli Step eseguiti ed analisi completata
         
-        Descrizione: Verifica che con TUTTI gli step selezionati,
-        la pipeline completi con successo.
+        INPUT:
+        - Step selezionati: TUTTI
+            * run_cloner = True
+            * run_cloner_check = True
+            * run_producer = True
+            * run_consumer = True
+            * run_metrics = True
+        - IO directory: temp_io_structure - ESISTE
+        - Repo directory: temp_io_structure/repos - ESISTE
+        - CSV file: temp_io_structure/projects_TF12.csv - ESISTE, 5 righe dati
+        - N-repos: 3 (0 < 3 < 5)
+        
+        OUTPUT ATTESO:
+        - Tutti i 5 step eseguiti
+        - Messaggio: "Success" / "Pipeline completed successfully!"
         """
         config_view = gui_components['config_view']
         main_window = gui_components['main_window']
@@ -1105,7 +1249,7 @@ class TestGUISystemTestFrames:
         config_view.repo_path_var.set(str(repo_path))
         
         # Setup CSV1 + CS1
-        csv_path = temp_io_structure / "projects_tf10.csv"
+        csv_path = temp_io_structure / "projects_TF12.csv"
         num_csv_rows = 5
         with open(csv_path, 'w', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
@@ -1117,7 +1261,7 @@ class TestGUISystemTestFrames:
         # Setup N3: N-repos valido
         config_view.n_repos_var.set(3)
         
-        debug(f"\n[DEBUG] TF10 - Pre-condizioni:")
+        debug(f"\n[DEBUG] TF12 - Pre-condizioni:")
         debug(f"  ST2 (tutti gli step): {all_steps_selected(config_view)}")
         debug(f"  CV1 (Cloning+Verify): {cloning_verify_selected(config_view)}")
         debug(f"  IO1 (IO esiste): {temp_io_structure.exists()}")
@@ -1148,19 +1292,19 @@ class TestGUISystemTestFrames:
                 for title, msg in info_shown
             )
             
-            debug(f"\n[DEBUG] TF10 - Messaggi: {info_shown}")
+            debug(f"\n[DEBUG] TF12 - Messaggi: {info_shown}")
             
-            assert success_shown, f"TF10 FALLITO: Pipeline non completata."
+            assert success_shown, f"TF12 FALLITO: Pipeline non completata."
             
             # Verifica che tutti gli step fossero selezionati
             config = config_view.get_config_values()
-            assert config['run_cloner'], "TF10: run_cloner dovrebbe essere True"
-            assert config['run_cloner_check'], "TF10: run_cloner_check dovrebbe essere True"
-            assert config['run_producer_analysis'], "TF10: run_producer dovrebbe essere True"
-            assert config['run_consumer_analysis'], "TF10: run_consumer dovrebbe essere True"
-            assert config['run_metrics_analysis'], "TF10: run_metrics dovrebbe essere True"
+            assert config['run_cloner'], "TF12: run_cloner dovrebbe essere True"
+            assert config['run_cloner_check'], "TF12: run_cloner_check dovrebbe essere True"
+            assert config['run_producer_analysis'], "TF12: run_producer dovrebbe essere True"
+            assert config['run_consumer_analysis'], "TF12: run_consumer dovrebbe essere True"
+            assert config['run_metrics_analysis'], "TF12: run_metrics dovrebbe essere True"
             
-            debug(f"\nTF10 PASSED: Tutti gli step eseguiti, analisi completata con successo")
+            debug(f"\nTF12 PASSED: Tutti gli step eseguiti, analisi completata con successo")
             
         finally:
             main_window.show_info = original_show_info
