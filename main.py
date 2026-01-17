@@ -30,7 +30,7 @@ PROJECT_LIST_PATH = IO_PATH / "applied_projects.csv"
 REPOSITORY_PATH = IO_PATH / "repos"
 ANALYZER_PATH = Path("./modules/analyzer")
 ORACLE_PATH = Path("./modules/oracle")
-N_REPOS = 10
+N_REPOS = 1
 
 # Steps
 CLONER = True

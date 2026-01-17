@@ -1,5 +1,5 @@
 ProjectName,Is_Real_ML_consumer,Is_ML_consumer
-921kiyo/3d-dl,Yes,No
+921kiyo/3d-dl,Yes,Yes
 aaronlam88/cmpe295,No,No
 abdullahselek/koolsla,No,No
 abreheret/PixelAnnotationTool,No,No
@@ -9,7 +9,7 @@ agusgun/FakeImageDetector,No,No
 AhmedImtiazPrio/Keras-AudioDataGenerator,No,No
 ai-med/nn-common-modules,No,No
 akanimax/BMSG-GAN,Yes,No
-AliaksandrSiarohin/monkey-net,Yes,Yes
+AliaksandrSiarohin/monkey-net,Yes,No
 alina1021/facial_expression_transfer,No,No
 alirezamika/evostra,No,No
 allenai/scispacy,No,No
