@@ -47,6 +47,32 @@ class AppController:
             )
             return
 
+        # Validate n_repos
+        n_repos = config_values["n_repos"]
+        if n_repos < 0:
+            self.main_window.show_error(
+                "Invalid Value", f"N-repos cannot be negative: {n_repos}"
+            )
+            return
+
+        # Validate n_repos against CSV rows (only if Cloning or Verify is selected)
+        if config_values["run_cloner"] or config_values["run_cloner_check"]:
+            csv_path = config_values["project_list_path"]
+            if csv_path.exists():
+                try:
+                    with open(csv_path, 'r', encoding='utf-8') as f:
+                        # Count data rows (exclude header)
+                        lines = f.readlines()
+                        csv_row_count = len(lines) - 1 if len(lines) > 0 else 0
+                    if n_repos > csv_row_count:
+                        self.main_window.show_error(
+                            "Invalid Value",
+                            f"N-repos ({n_repos}) exceeds CSV rows ({csv_row_count})"
+                        )
+                        return
+                except Exception:
+                    pass  # Let pipeline handle CSV errors
+
         # Update output reader to use io_path/output
         self.output_reader.output_path = io_path / "output"
 
