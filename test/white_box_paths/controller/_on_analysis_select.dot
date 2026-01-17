@@ -1,0 +1,70 @@
+digraph CFG {
+  rankdir=TB;
+  node [shape=box, fontname=Consolas];
+  edge [fontname=Consolas];
+  "EXIT" [label="EXIT"];
+  "ENTRY" [label="ENTRY: _on_analysis_select"];
+  "b1" [label="base = self.output_reader.output_path
+prod_csv = base / 'producer' / f'producer_{analysis_id}' / 'results.csv'
+cons_csv = base / 'consumer' / f'consumer_{analysis_id}' / 'results.csv'"];
+  "try2" [label="try"];
+  "b3" [label="producer_rows = self.output_reader.load_csv(prod_csv).rows"];
+  "b4" [label="producer_rows = []"];
+  "try5" [label="try"];
+  "b6" [label="consumer_rows = self.output_reader.load_csv(cons_csv).rows"];
+  "b7" [label="consumer_rows = []"];
+  "b8" [label="prod_set = {r[0] for r in producer_rows if len(r) > 0}
+cons_set = {r[0] for r in consumer_rows if len(r) > 0}
+summary = {'Producer': len(prod_set), 'Consumer': len(cons_set), 'Producer & Consumer': len(prod_set & cons_set)}
+self.main_window.get_dashboard_view().update_summary(summary)
+metrics_csv = base / 'metrics' / f'metrics_{analysis_id}' / 'metrics.csv'"];
+  "try9" [label="try"];
+  "b10" [label="metrics_rows = self.output_reader.load_csv(metrics_csv).rows
+cc_values = [float(r[1]) for r in metrics_rows if len(r) > 2]
+mi_values = [float(r[2]) for r in metrics_rows if len(r) > 2]
+metrics_summary = {'Media Complexity Cyclomatic': round(sum(cc_values) / len(cc_values), 2) if cc_values else 0, 'Media…
+self.main_window.get_dashboard_view().update_metrics(metrics_summary)"];
+  "b11" [label="metrics_summary = {'Media Complexity Cyclomatic': 0, 'Media Maintainability Index': 0}
+self.main_window.get_dashboard_view().update_metrics(metrics_summary)"];
+  "b12" [label="self.main_window.show_error('Metrics Error', f'Errore nel calcolo delle metriche: {e}')"];
+  "b13" [label="keyword_pairs = []"];
+  "loop14" [label="for r in producer_rows"];
+  "if15" [label="if len(r) > 4"];
+  "b16" [label="keyword_pairs.append((r[2], r[4]))"];
+  "loop17" [label="for r in consumer_rows"];
+  "if18" [label="if len(r) > 4"];
+  "b19" [label="keyword_pairs.append((r[2], r[4]))"];
+  "b20" [label="keyword_count = Counter(keyword_pairs)
+top10_keywords = sorted(keyword_count.items(), key=lambda x: (-x[1], x[0][0], x[0][1]))[:10]
+keyword_data = [(lib, kw, count) for (lib, kw), count in top10_keywords]
+self.main_window.get_dashboard_view().update_library(keyword_data)"];
+  "ENTRY" -> "b1" [color="#4363D8"];
+  "b1" -> "try2" [color="#4363D8"];
+  "try2" -> "b3" [label="try", color="#4363D8"];
+  "try2" -> "b4" [label="except FileNotFoundError", color="#E6194B"];
+  "b3" -> "try5" [color="#4363D8"];
+  "b4" -> "try5" [color="#E6194B"];
+  "try5" -> "b6" [label="try", color="#4363D8"];
+  "try5" -> "b7" [label="except FileNotFoundError", color="#E6194B"];
+  "b6" -> "b8" [color="#4363D8"];
+  "b7" -> "b8" [color="#E6194B"];
+  "b8" -> "try9" [color="#4363D8"];
+  "try9" -> "b10" [label="try", color="#4363D8"];
+  "try9" -> "b11" [label="except FileNotFoundError", color="#E6194B"];
+  "try9" -> "b12" [label="except Exception as e"];
+  "b10" -> "b13" [color="#4363D8"];
+  "b11" -> "b13" [color="#E6194B"];
+  "b12" -> "b13";
+  "b13" -> "loop14" [color="#4363D8"];
+  "loop14" -> "if15" [label="T", color="#4363D8"];
+  "if15" -> "b16" [label="T", color="#4363D8"];
+  "b16" -> "loop14" [label="back", color="#4363D8"];
+  "if15" -> "loop14" [label="back"];
+  "loop14" -> "loop17" [label="F", color="#4363D8"];
+  "loop17" -> "if18" [label="T", color="#4363D8"];
+  "if18" -> "b19" [label="T", color="#4363D8"];
+  "b19" -> "loop17" [label="back", color="#4363D8"];
+  "if18" -> "loop17" [label="back", ];
+  "loop17" -> "b20" [label="F", color="#4363D8"];
+  "b20" -> "EXIT" [color="#4363D8"];
+}

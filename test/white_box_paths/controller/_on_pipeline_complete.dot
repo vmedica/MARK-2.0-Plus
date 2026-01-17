@@ -1,0 +1,26 @@
+digraph CFG {
+  rankdir=TB;
+  node [shape=box, fontname=Consolas];
+  edge [fontname=Consolas];
+  "EXIT" [label="EXIT"];
+  "ENTRY" [label="ENTRY: _on_pipeline_complete"];
+  "b1" [label="config_view = self.main_window.get_config_view()
+config_view.set_running_state(False)
+result = getattr(self, '_result', None)"];
+  "if2" [label="if result and result.success"];
+  "b3" [label="self.main_window.show_info('Success', 'Pipeline completed successfully!')
+self._refresh_output_tree()
+self.main_window.switch_to_output_tab()"];
+  "if4" [label="if result"];
+  "b5" [label="self.main_window.show_error('Pipeline Failed', f'Error: {result.error_message}')"];
+  "b6" [label="self.main_window.show_error('Error', 'Unknown error occurred')"];
+  "ENTRY" -> "b1" [color="#4363D8"];
+  "b1" -> "if2" [color="#4363D8"];
+  "if2" -> "b3" [label="T", color="#4363D8"];
+  "if2" -> "if4" [label="F", color="#E6194B"];
+  "if4" -> "b5" [label="T", color="#E6194B"];
+  "if4" -> "b6" [label="F", color="#F58231"];
+  "b3" -> "EXIT" [color="#4363D8"];
+  "b5" -> "EXIT" [color="#E6194B"];
+  "b6" -> "EXIT" [color="#F58231"];
+}

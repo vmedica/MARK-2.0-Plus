@@ -1,0 +1,19 @@
+digraph CFG {
+  rankdir=TB;
+  node [shape=box, fontname=Consolas];
+  edge [fontname=Consolas];
+  "EXIT" [label="EXIT"];
+  "ENTRY" [label="ENTRY: _on_file_select"];
+  "b1" [label="output_view = self.main_window.get_output_view()
+output_view.show_loading()"];
+  "try2" [label="try"];
+  "b3" [label="csv_data = self.output_reader.load_csv(file_path)
+output_view.display_csv_data(headers=csv_data.headers, rows=csv_data.rows, file_name=file_path.name)"];
+  "b4" [label="output_view.show_error(str(e))"];
+  "ENTRY" -> "b1" [color="#4363D8"];
+  "b1" -> "try2" [color="#4363D8"];
+  "try2" -> "b3" [label="try", color="#4363D8"];
+  "try2" -> "b4" [label="except Exception as e", color="#E6194B"];
+  "b3" -> "EXIT" [color="#4363D8"];
+  "b4" -> "EXIT" [color="#E6194B"];
+}

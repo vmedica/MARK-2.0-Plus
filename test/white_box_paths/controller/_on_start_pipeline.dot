@@ -1,0 +1,26 @@
+digraph CFG {
+  rankdir=TB;
+  node [shape=box, fontname=Consolas];
+  edge [fontname=Consolas];
+  "EXIT" [label="EXIT"];
+  "ENTRY" [label="ENTRY: _on_start_pipeline"];
+  "b1" [label="config_view = self.main_window.get_config_view()
+config_values = config_view.get_config_values()
+io_path = config_values['io_path']"];
+  "if2" [label="if not io_path.exists()"];
+  "b3" [label="self.main_window.show_error('Invalid Path', f'IO path does not exist: {io_path}')
+return"];
+  "b4" [label="self.output_reader.output_path = io_path / 'output'
+pipeline_config = PipelineConfig(io_path=config_values['io_path'], repository_path=config_values['repository_path'], pr…
+self._pipeline_service = PipelineService(pipeline_config)
+config_view.set_running_state(True)
+self._pipeline_thread = threading.Thread(target=self._run_pipeline_thread, daemon=True)
+self._pipeline_thread.start()
+self._poll_completion()"];
+  "ENTRY" -> "b1" [color="#4363D8"];
+  "b1" -> "if2" [color="#4363D8"];
+  "if2" -> "b3" [label="T", color="#4363D8"];
+  "b3" -> "EXIT" [color="#4363D8"];
+  "if2" -> "b4" [label="F", color="#E6194B"];
+  "b4" -> "EXIT" [color="#E6194B"];
+}

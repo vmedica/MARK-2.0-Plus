@@ -1,0 +1,23 @@
+digraph CFG {
+  rankdir=TB;
+  node [shape=box, fontname=Consolas];
+  edge [fontname=Consolas];
+  "EXIT" [label="EXIT"];
+  "ENTRY" [label="ENTRY: _refresh_output_tree"];
+  "b1" [label="output_view = self.main_window.get_output_view()
+dashboard = self.main_window.get_dashboard_view()
+analyses = self.output_reader.find_complete_analyses()
+dashboard.populate_analyses(analyses)
+dashboard.show_default_message()"];
+  "try2" [label="try"];
+  "b3" [label="tree = self.output_reader.scan_output_tree()
+tree_data = self._convert_tree_to_dict(tree)
+output_view.populate_tree(tree_data)"];
+  "b4" [label="output_view.show_error(f'Failed to scan output directory: {e}')"];
+  "ENTRY" -> "b1" [color="#4363D8"];
+  "b1" -> "try2" [color="#4363D8"];
+  "try2" -> "b3" [label="try", color="#4363D8"];
+  "try2" -> "b4" [label="except Exception as e"];
+  "b3" -> "EXIT" [color="#4363D8"];
+  "b4" -> "EXIT";
+}
