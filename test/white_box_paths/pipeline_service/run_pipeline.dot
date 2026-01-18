@@ -1,0 +1,44 @@
+digraph CFG {
+  rankdir=TB;
+  node [shape=box, fontname=Consolas];
+  edge [fontname=Consolas];
+  "EXIT" [label="EXIT"];
+  "ENTRY" [label="ENTRY: run_pipeline"];
+  "b1" [label="result = PipelineResult(success=True)"];
+  "try2" [label="try"];
+  "if3" [label="if self.config.run_cloner"];
+  "b4" [label="self._run_cloner()"];
+  "if5" [label="if self.config.run_cloner_check"];
+  "b6" [label="self._run_cloner_check()"];
+  "if7" [label="if self.config.run_producer_analysis"];
+  "b8" [label="result.producer_output_dir = self._run_producer_analysis()"];
+  "if9" [label="if self.config.run_consumer_analysis"];
+  "b10" [label="result.consumer_output_dir = self._run_consumer_analysis()"];
+  "if11" [label="if self.config.run_metrics_analysis"];
+  "b12" [label="result.metrics_output_dir = self._run_metrics_analysis()"];
+  "b13" [label="logger.exception('Pipeline execution failed')
+result.success = False
+result.error_message = str(e)"];
+  "b14" [label="return result"];
+  "ENTRY" -> "b1" [color="#4363D8"];
+  "b1" -> "try2" [color="#4363D8"];
+  "try2" -> "if3" [label="try", color="#4363D8"];
+  "if3" -> "b4" [label="T", color="#E6194B"];
+  "b4" -> "if5"  [color="#E6194B"];
+  "if3" -> "if5" [label="F", color="#4363D8"];
+  "if5" -> "b6" [label="T", color="#E6194B"];
+  "b6" -> "if7" [color="#E6194B"];
+  "if5" -> "if7" [label="F", color="#4363D8"];
+  "if7" -> "b8" [label="T", color="#4363D8"];
+  "b8" -> "if9" [color="#4363D8"];
+  "if7" -> "if9" [label="F", color="#E6194B"];
+  "if9" -> "b10" [label="T", color="#4363D8"];
+  "b10" -> "if11" [color="#4363D8"];
+  "if9" -> "if11" [label="F", color="#E6194B"];
+  "if11" -> "b12" [label="T", color="#4363D8"];
+  "try2" -> "b13" [label="except Exception as e", color="#F58231"];
+  "b12" -> "b14" [color="#4363D8"];
+  "if11" -> "b14" [label="F", color="#E6194B"];
+  "b13" -> "b14" [color="#F58231"];
+  "b14" -> "EXIT" [color="#4363D8"];
+}
