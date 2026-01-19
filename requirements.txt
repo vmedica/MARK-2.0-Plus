@@ -1,3 +1,4 @@
 # Runtime dependencies for MARK 2.0
 pandas~=2.2.3
 GitPython~=3.1.44
+ttkbootstrap~=1.10.1
