@@ -28,14 +28,15 @@ import shutil
 
 @pytest.fixture(scope="session")
 def project_root():
-    """Get project root directory."""
-    return Path(__file__).resolve().parents[2]
+    """Get project root directory (MARK-2.0-Plus)."""
+    return Path(__file__).resolve().parents[3]
+
 
 
 @pytest.fixture(scope="session")
 def test_repo_dir(project_root):
     """Get path to test data repositories."""
-    return project_root / "test" / "system_test_metrics" / "test_repos"
+    return project_root / "test" / "system_test" / "system_test_metrics" / "test_repos"
 
 
 @pytest.fixture
