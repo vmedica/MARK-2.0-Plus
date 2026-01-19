@@ -1,0 +1,24 @@
+digraph CFG {
+  rankdir=TB;
+  node [shape=box, fontname=Consolas];
+  edge [fontname=Consolas];
+  "EXIT" [label="EXIT"];
+  "ENTRY" [label="ENTRY: load_csv"];
+  "b1" [label="file_path = Path(file_path)"];
+  "if2" [label="if not file_path.exists()"];
+  "b3" [label="raise FileNotFoundError(f'CSV file not found: {file_path}')"];
+  "b4" [label="with open(file_path, 'r', encoding='utf-8', newline='') as f:     reader = csv.reader(f)     rows = list(reader)"];
+  "if5" [label="if not rows"];
+  "b6" [label="return CSVData(headers=[], rows=[], file_path=file_path)"];
+  "b7" [label="return CSVData(headers=rows[0], rows=rows[1:], file_path=file_path)"];
+  "ENTRY" -> "b1" [color="#4363D8"];
+  "b1" -> "if2" [color="#4363D8"];
+  "if2" -> "b3" [label="T", color="#4363D8"];
+  "b3" -> "EXIT" [label="exception", color="#4363D8"];
+  "if2" -> "b4" [label="F", color="#E6194B"];
+  "b4" -> "if5" [color="#E6194B"];
+  "if5" -> "b6" [label="T", color="#F58231"];
+  "b6" -> "EXIT" [color="#F58231"];
+  "if5" -> "b7" [label="F", color="#E6194B"];
+  "b7" -> "EXIT" [color="#E6194B"];
+}

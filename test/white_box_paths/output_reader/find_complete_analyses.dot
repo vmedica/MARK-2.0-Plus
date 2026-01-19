@@ -1,0 +1,16 @@
+digraph CFG {
+  rankdir=TB;
+  node [shape=box, fontname=Consolas];
+  edge [fontname=Consolas];
+  "EXIT" [label="EXIT"];
+  "ENTRY" [label="ENTRY: find_complete_analyses"];
+  "b1" [label="producer_path = self.output_path / 'producer'
+consumer_path = self.output_path / 'consumer'
+metrics_path = self.output_path / 'metrics'
+producer = {d.name.split('_')[-1] for d in producer_path.iterdir() if d.is_dir()} if producer_path.exists() else set()
+consumer = {d.name.split('_')[-1] for d in consumer_path.iterdir() if d.is_dir()} if consumer_path.exists() else set()
+metrics = {d.name.split('_')[-1] for d in metrics_path.iterdir() if d.is_dir()} if metrics_path.exists() else set()
+return sorted(producer | consumer | metrics)"];
+  "ENTRY" -> "b1" [color="#4363D8"];
+  "b1" -> "EXIT" [color="#4363D8"];
+}

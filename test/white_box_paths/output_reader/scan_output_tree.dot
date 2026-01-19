@@ -1,0 +1,42 @@
+digraph CFG {
+  rankdir=TB;
+  node [shape=box, fontname=Consolas];
+  edge [fontname=Consolas];
+  "EXIT" [label="EXIT"];
+  "ENTRY" [label="ENTRY: scan_output_tree"];
+  "b1" [label="tree = OutputTree()"];
+  "loop2" [label="for category in self.CATEGORIES"];
+  "b3" [label="category_path = self.output_path / category"];
+  "if4" [label="if not category_path.exists()"];
+  "b5" [label="continue"];
+  "b6" [label="dirs_list = getattr(tree, f'{category}_dirs')"];
+  "loop7" [label="for run_dir in sorted(category_path.iterdir())"];
+  "if8" [label="if not run_dir.is_dir()"];
+  "b9" [label="continue"];
+  "b10" [label="output_dir = OutputDirectory(name=run_dir.name, path=run_dir, category=category)"];
+  "loop11" [label="for csv_file in run_dir.glob('*.csv')"];
+  "b12" [label="output_dir.files.append(OutputFile(name=csv_file.name, path=csv_file, category=category, run_id=run_dir.name))"];
+  "b13" [label="output_dir.files.sort(key=lambda f: (not f.is_summary, f.name))
+dirs_list.append(output_dir)"];
+  "b14" [label="return tree"];
+  "ENTRY" -> "b1" [color="#4363D8"];
+  "b1" -> "loop2" [color="#4363D8"];
+  "loop2" -> "b3" [label="T", color="#4363D8"];
+  "b3" -> "if4" [color="#4363D8"];
+  "if4" -> "b5" [label="T", color="#4363D8"];
+  "b5" -> "loop2" [color="#4363D8"];
+  "if4" -> "b6" [label="F", color="#E6194B"];
+  "b6" -> "loop7" [color="#E6194B"];
+  "loop7" -> "if8" [label="T", color="#E6194B"];
+  "if8" -> "b9" [label="T"];
+  "b9" -> "loop7" [];
+  "if8" -> "b10" [label="F", color="#E6194B"];
+  "b10" -> "loop11" [color="#E6194B"];
+  "loop11" -> "b12" [label="T", color="#E6194B"];
+  "b12" -> "loop11" [label="back", color="#E6194B"];
+  "loop11" -> "b13" [label="F", color="#E6194B"];
+  "b13" -> "loop7" [label="back", color="#E6194B"];
+  "loop7" -> "loop2" [label="back", color="#E6194B"];
+  "loop2" -> "b14" [label="F", color="#4363D8"];
+  "b14" -> "EXIT" [color="#4363D8"];
+}
