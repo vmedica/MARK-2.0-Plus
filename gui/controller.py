@@ -3,6 +3,7 @@
 import threading
 from pathlib import Path
 from typing import Optional
+from collections import Counter
 
 from gui.services.pipeline_service import (
     PipelineService,
@@ -33,6 +34,12 @@ class AppController:
         output_view = self.main_window.get_output_view()
         output_view.register_callback("on_file_select", self._on_file_select)
         output_view.register_callback("on_refresh", self._refresh_output_tree)
+
+        dashboard_view = self.main_window.get_dashboard_view()
+        dashboard_view.register_callback(
+            "on_analysis_select", self._on_analysis_select
+        )
+        dashboard_view.register_callback("on_refresh", self._refresh_output_tree)
 
     def _on_start_pipeline(self) -> None:
         """Handle start pipeline request from config view."""
@@ -138,13 +145,22 @@ class AppController:
 
     def _refresh_output_tree(self) -> None:
         """Refresh the output directory tree."""
-        output_view = self.main_window.get_output_view()
+        output_view = self.main_window.get_output_view() 
+        
+        dashboard = self.main_window.get_dashboard_view()
+        analyses = self.output_reader.find_complete_analyses()
+        dashboard.populate_analyses(analyses)
+        # Reset dashboard to show default message
+        dashboard.show_default_message()
+        
         try:
             tree = self.output_reader.scan_output_tree()
             tree_data = self._convert_tree_to_dict(tree)
             output_view.populate_tree(tree_data)
         except Exception as e:
             output_view.show_error(f"Failed to scan output directory: {e}")
+
+       
 
     def _convert_tree_to_dict(self, tree) -> dict:
         """Convert OutputTree to dictionary format expected by view."""
@@ -174,3 +190,83 @@ class AppController:
             )
         except Exception as e:
             output_view.show_error(str(e))
+    
+
+    def _on_analysis_select(self, analysis_id: str):
+        base = self.output_reader.output_path
+
+        # --- Number of Producer / Consumer ---
+        prod_csv = base / "producer" / f"producer_{analysis_id}" / "results.csv"
+        cons_csv = base / "consumer" / f"consumer_{analysis_id}" / "results.csv"
+
+        # Load CSV files, use empty lists if files don't exist
+        try:
+            producer_rows = self.output_reader.load_csv(prod_csv).rows
+        except FileNotFoundError:
+            producer_rows = []
+        
+        try:
+            consumer_rows = self.output_reader.load_csv(cons_csv).rows
+        except FileNotFoundError:
+            consumer_rows = []
+
+        prod_set = {r[0] for r in producer_rows if len(r) > 0}
+        cons_set = {r[0] for r in consumer_rows if len(r) > 0}
+
+        summary = {
+            "Producer": len(prod_set),
+            "Consumer": len(cons_set),
+            "Producer & Consumer": len(prod_set & cons_set)
+        }
+
+        # Aggiorna le label del Summary
+        self.main_window.get_dashboard_view().update_summary(summary)
+
+        # --- Metrics ---
+        metrics_csv = base / "metrics" / f"metrics_{analysis_id}" / "metrics.csv"
+        try:
+            metrics_rows = self.output_reader.load_csv(metrics_csv).rows
+
+            # Calcolo media per ogni colonna numerica
+            cc_values = [float(r[1]) for r in metrics_rows if len(r) > 2]  # Complexity Cyclomatic
+            mi_values = [float(r[2]) for r in metrics_rows if len(r) > 2]  # Maintainability Index
+
+            metrics_summary = {
+                "Media Complexity Cyclomatic": round(sum(cc_values)/len(cc_values), 2) if cc_values else 0,
+                "Media Maintainability Index": round(sum(mi_values)/len(mi_values), 2) if mi_values else 0
+            }
+
+            # Aggiorna le label delle metriche
+            self.main_window.get_dashboard_view().update_metrics(metrics_summary)
+
+        except FileNotFoundError:
+            # Se il CSV delle metriche non esiste
+            metrics_summary = {
+                "Media Complexity Cyclomatic": 0,
+                "Media Maintainability Index": 0
+            }
+            self.main_window.get_dashboard_view().update_metrics(metrics_summary)
+        except Exception as e:
+            self.main_window.show_error("Metrics Error", f"Errore nel calcolo delle metriche: {e}")
+
+        # --- Keywords ---
+        # Extract (library, keyword) pairs from both producer and consumer
+        # CSV columns: ProjectName(0), Is ML(1), libraries(2), where(3), keyword(4), line_number(5)
+        keyword_pairs = []
+        for r in producer_rows:
+            if len(r) > 4:
+                keyword_pairs.append((r[2], r[4]))  # (library, keyword)
+        for r in consumer_rows:
+            if len(r) > 4:
+                keyword_pairs.append((r[2], r[4]))  # (library, keyword)
+
+        # Count occurrences of each (library, keyword) pair
+        keyword_count = Counter(keyword_pairs)
+
+        # Sort by occurrences (descending) and take top 10
+        top10_keywords = sorted(keyword_count.items(), key=lambda x: (-x[1], x[0][0], x[0][1]))[:10]
+        
+        # Convert to list of tuples (library, keyword, occurrences)
+        keyword_data = [(lib, kw, count) for (lib, kw), count in top10_keywords]
+        self.main_window.get_dashboard_view().update_library(keyword_data)
+

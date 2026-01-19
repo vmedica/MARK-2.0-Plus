@@ -110,3 +110,15 @@ class OutputReader:
             return CSVData(headers=[], rows=[], file_path=file_path)
 
         return CSVData(headers=rows[0], rows=rows[1:], file_path=file_path)
+
+    def find_complete_analyses(self) -> list[str]:
+        producer_path = self.output_path / "producer"
+        consumer_path = self.output_path / "consumer"
+        metrics_path = self.output_path / "metrics"
+        
+        producer = {d.name.split("_")[-1] for d in producer_path.iterdir()} if producer_path.exists() else set()
+        consumer = {d.name.split("_")[-1] for d in consumer_path.iterdir()} if consumer_path.exists() else set()
+        metrics = {d.name.split("_")[-1] for d in metrics_path.iterdir()} if metrics_path.exists() else set()
+
+        # Return analysis IDs where at least one of producer, consumer, or metrics exists
+        return sorted(producer | consumer | metrics)
