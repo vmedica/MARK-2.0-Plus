@@ -7,3 +7,4 @@ radon~=6.0
 
 # Testing
 pytest
+pytest-cov
