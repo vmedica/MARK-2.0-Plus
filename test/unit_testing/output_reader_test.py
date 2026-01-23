@@ -27,7 +27,7 @@ class TestOutputReaderScanOutputTree(unittest.TestCase):
 
     @patch("pathlib.Path.exists")
     def test_scan_output_tree_empty_directory(self, mock_exists):
-        """Test case 1: Empty output directory → returns empty tree."""
+        """(UT-CR2-04) Test case 1: Empty output directory → returns empty tree."""
         # Arrange
         mock_exists.return_value = False
 
@@ -41,7 +41,7 @@ class TestOutputReaderScanOutputTree(unittest.TestCase):
         self.assertEqual(len(tree.metrics_dirs), 0)
 
     def test_scan_output_tree_with_all_categories(self):
-        """Test case 2: All categories (producer, consumer, metrics) with CSV files."""
+        """(UT-CR2-05)Test case 2: All categories (producer, consumer, metrics) with CSV files."""
         # Arrange
         # Create mock CSV files
         producer_csv1 = Mock(spec=Path)
@@ -137,7 +137,7 @@ class TestOutputReaderLoadCSV(unittest.TestCase):
 
     @patch("pathlib.Path.exists")
     def test_load_csv_file_not_exists(self, mock_exists):
-        """Test case 3: Non-existent file → raises FileNotFoundError."""
+        """(UT-CR2-06) Test case 3: Non-existent file → raises FileNotFoundError."""
         # Arrange
         csv_file = Path("/fake/missing.csv")
         mock_exists.return_value = False
@@ -155,7 +155,7 @@ class TestOutputReaderLoadCSV(unittest.TestCase):
     )
     @patch("pathlib.Path.exists")
     def test_load_csv_valid_file(self, mock_exists, mock_file):
-        """Test case 4: Valid CSV file → returns CSVData with headers and rows."""
+        """(UT-CR2-07)Test case 4: Valid CSV file → returns CSVData with headers and rows."""
         # Arrange
         csv_file = Path("/fake/test.csv")
         mock_exists.return_value = True
@@ -176,7 +176,7 @@ class TestOutputReaderLoadCSV(unittest.TestCase):
     @patch("builtins.open", new_callable=mock_open, read_data="")
     @patch("pathlib.Path.exists")
     def test_load_csv_empty_file(self, mock_exists, mock_file):
-        """Test case 5: Empty CSV file → returns empty CSVData."""
+        """(UT-CR2-08) Test case 5: Empty CSV file → returns empty CSVData."""
         # Arrange
         csv_file = Path("/fake/empty.csv")
         mock_exists.return_value = True
@@ -199,7 +199,7 @@ class TestOutputReaderFindCompleteAnalyses(unittest.TestCase):
         self.reader = OutputReader(self.output_path)
 
     def test_find_complete_analyses_no_directories(self):
-        """Test case 6: No analysis directories → returns empty list."""
+        """(UT-CR3-01) Test case 6: No analysis directories → returns empty list."""
         # Arrange
         producer_path = Mock(spec=Path)
         producer_path.exists.return_value = False
@@ -230,7 +230,7 @@ class TestOutputReaderFindCompleteAnalyses(unittest.TestCase):
         self.assertEqual(analyses, [])
 
     def test_find_complete_analyses_all_categories_present(self):
-        """Test case 7: All categories with same analysis ID → returns that ID."""
+        """(UT-CR3-02) Test case 7: All categories with same analysis ID → returns that ID."""
         # Arrange
         producer_dir = Mock(spec=Path)
         producer_dir.name = "producer_123"
