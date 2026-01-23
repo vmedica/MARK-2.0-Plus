@@ -35,7 +35,7 @@ class TestMLAnalyzerAnalyzeSingleFile(unittest.TestCase):
         )
 
     def test_analyze_single_file_not_exists(self):
-        """Test case 1: File does not exist."""
+        """(UT-CR1-01) Test case 1: File does not exist."""
         # Arrange
         fake_file = "non_existent_file.py"
         fake_repo = "/fake/repo"
@@ -54,7 +54,7 @@ class TestMLAnalyzerAnalyzeSingleFile(unittest.TestCase):
         self.assertEqual(sloc_val, 0)
 
     def test_analyze_single_file_read_error(self):
-        """Test case 2: Error reading file."""
+        """(UT-CR1-02) Test case 2: Error reading file."""
         # Arrange
         fake_file = "existing_file.py"
         fake_repo = "/fake/repo"
@@ -87,7 +87,7 @@ class TestMLAnalyzerAnalyzeSingleFile(unittest.TestCase):
     def test_analyze_single_file_with_exceptions_and_keywords(
         self, mock_cc_visit, mock_mi_visit
     ):
-        """Test case 3: File reads successfully, CC and MI raise exceptions, keywords found."""
+        """(UT-CR1-03) Test case 3: File reads successfully, CC and MI raise exceptions, keywords found."""
         # Arrange
         fake_file = "test_file.py"
         fake_repo = "/fake/repo"
@@ -126,7 +126,7 @@ class TestMLAnalyzerAnalyzeSingleFile(unittest.TestCase):
     def test_analyze_single_file_success_no_keywords(
         self, mock_cc_visit, mock_mi_visit
     ):
-        """Test case 4: CC and MI succeed, but no keywords found."""
+        """(UT-CR1-04) Test case 4: CC and MI succeed, but no keywords found."""
         # Arrange
         fake_file = "simple_file.py"
         fake_repo = "/fake/repo"
@@ -177,7 +177,7 @@ class TestMLAnalyzerAnalyzeProject(unittest.TestCase):
     def test_analyze_project_non_metrics_with_keywords(
         self, mock_to_csv, mock_walk, mock_is_valid_file
     ):
-        """Test case 1: Role != METRICS, includes invalid file, valid file without keywords, valid file with keywords."""
+        """(UT-CR1-05) Test case 1: Role != METRICS, includes invalid file, valid file without keywords, valid file with keywords."""
         # Arrange
         repo = "/fake/repo"
         project = "test_project"
@@ -271,7 +271,7 @@ class TestMLAnalyzerAnalyzeProject(unittest.TestCase):
     def test_analyze_project_metrics_role(
         self, mock_to_csv, mock_walk, mock_is_valid_file
     ):
-        """Test case 2: Role == METRICS, includes file with SLOC > 0 and file with SLOC == 0."""
+        """(UT-CR1-06) Test case 2: Role == METRICS, includes file with SLOC > 0 and file with SLOC == 0."""
         # Arrange
         metrics_analyzer = ConcreteMLAnalyzer(
             role=AnalyzerRole.METRICS,
@@ -344,7 +344,7 @@ class TestMLAnalyzerAnalyzeProjectsSet(unittest.TestCase):
     def test_analyze_projects_set_non_metrics_with_mixed_paths(
         self, mock_to_csv, mock_listdir, mock_isdir
     ):
-        """Test case 1: Role != METRICS with non-dir project, non-dir path, and valid dir returning non-empty df."""
+        """(UT-CR1-07) Test case 1: Role != METRICS with non-dir project, non-dir path, and valid dir returning non-empty df."""
         # Arrange
         input_folder = "/fake/input"
         output_folder = "/fake/output"
@@ -434,7 +434,7 @@ class TestMLAnalyzerAnalyzeProjectsSet(unittest.TestCase):
     def test_analyze_projects_set_metrics_with_empty_and_full_projects(
         self, mock_to_csv, mock_listdir, mock_isdir
     ):
-        """Test case 2: Role == METRICS with project A (empty cc/sloc) and project B (with cc/sloc), all df empty."""
+        """(UT-CR1-08) Test case 2: Role == METRICS with project A (empty cc/sloc) and project B (with cc/sloc), all df empty."""
         # Arrange
         metrics_analyzer = ConcreteMLAnalyzer(
             role=AnalyzerRole.METRICS,
