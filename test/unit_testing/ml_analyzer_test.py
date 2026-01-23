@@ -53,7 +53,7 @@ class TestMLAnalyzerAnalyzeSingleFile(unittest.TestCase):
         self.assertEqual(mi_val, 0)
         self.assertEqual(sloc_val, 0)
 
-    def test_analyze_single_file_read_error(self):
+    def test_analyze_single_file_read_error(self):      #Command for execute only function and report: coverage run -m pytest test/unit_testing/ml_analyzer_test.py::TestMLAnalyzerAnalyzeSingleFile::test_analyze_single_file_read_error -v; coverage report -m --include="modules/analyzer/ml_analyzer.py"
         """(UT-CR1-02) Test case 2: Error reading file."""
         # Arrange
         fake_file = "existing_file.py"
