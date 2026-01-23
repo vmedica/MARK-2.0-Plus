@@ -89,7 +89,7 @@ class TestAppControllerIntegration(unittest.TestCase):
         self.assertIsNone(self.controller._pipeline_service)
 
     def test_on_start_pipeline_valid_path(self):
-        """TC2: Path esiste → pipeline avviata con thread."""
+        """(IT-CR2-10) TC2: Path esiste → pipeline avviata con thread."""
         # Arrange
         repos_path = self.io_path / "repos"
         repos_path.mkdir()
@@ -137,7 +137,7 @@ class TestAppControllerIntegration(unittest.TestCase):
                 mock_thread.start.assert_called_once()
 
     def test_on_pipeline_complete_success(self):
-        """TC3: Pipeline completa con successo → mostra info e aggiorna output."""
+        """(IT-CR2-11) TC3: Pipeline completa con successo → mostra info e aggiorna output."""
         # Arrange
         # Create output structure
         producer_dir = self.output_path / "producer" / "producer_1"
@@ -172,7 +172,7 @@ class TestAppControllerIntegration(unittest.TestCase):
         self.mock_main_window.switch_to_output_tab.assert_called_once()
 
     def test_on_pipeline_complete_failure(self):
-        """TC4: Pipeline fallisce → mostra errore."""
+        """(IT-CR2-12)TC4: Pipeline fallisce → mostra errore."""
         # Arrange
         error_msg = "Analysis failed: invalid configuration"
         self.controller._result = PipelineResult(success=False, error_message=error_msg)
@@ -193,7 +193,7 @@ class TestAppControllerIntegration(unittest.TestCase):
         self.mock_main_window.switch_to_output_tab.assert_not_called()
 
     def test_on_pipeline_complete_no_result(self):
-        """TC5: Pipeline completa senza result → errore sconosciuto."""
+        """(IT-CR2-13)TC5: Pipeline completa senza result → errore sconosciuto."""
         # Arrange - no _result attribute set
 
         # Act
@@ -206,7 +206,7 @@ class TestAppControllerIntegration(unittest.TestCase):
         )
 
     def test_refresh_output_tree_success(self):
-        """TC_REFRESH_1: Aggiorna tree con successo quando esistono analisi."""
+        """(IT-CR3-03) TC_REFRESH_1: Aggiorna tree con successo quando esistono analisi."""
         # Arrange
         # Create output structure with valid analysis
         producer_dir = self.output_path / "producer" / "producer_123"
@@ -245,7 +245,7 @@ class TestAppControllerIntegration(unittest.TestCase):
         self.assertIn("consumer", tree_data)
 
     def test_on_file_select_success(self):
-        """TC_FILE_1: Selezione file CSV valido → mostra dati."""
+        """(IT-CR3-04) TC_FILE_1: Selezione file CSV valido → mostra dati."""
         # Arrange
         csv_file = self.output_path / "test_results.csv"
         csv_file.write_text("ProjectName,Status\nproject1,Success\nproject2,Failed\n")
@@ -265,7 +265,7 @@ class TestAppControllerIntegration(unittest.TestCase):
         self.assertEqual(call_kwargs["file_name"], "test_results.csv")
 
     def test_on_file_select_file_not_found(self):
-        """TC_FILE_2: File non esiste → mostra errore."""
+        """(IT-CR3-05) TC_FILE_2: File non esiste → mostra errore."""
         # Arrange
         nonexistent_file = self.output_path / "nonexistent.csv"
 
@@ -279,7 +279,7 @@ class TestAppControllerIntegration(unittest.TestCase):
         self.assertIn("not found", error_msg.lower())
 
     def test_on_analysis_select_with_all_csv_files(self):
-        """TC6: Producer/Consumer/Metrics CSV esistono → calcola metriche complete."""
+        """(IT-CR3-06) TC6: Producer/Consumer/Metrics CSV esistono → calcola metriche complete."""
         # Arrange
         analysis_id = "456"
 
@@ -337,7 +337,7 @@ class TestAppControllerIntegration(unittest.TestCase):
         self.assertTrue(all(len(k) == 3 for k in keywords))
 
     def test_on_analysis_select_csv_not_found(self):
-        """TC7: Producer/Consumer CSV non trovati → metriche a zero."""
+        """(IT-CR3-07) TC7: Producer/Consumer CSV non trovati → metriche a zero."""
         # Arrange
         analysis_id = "999"
         # No CSV files created

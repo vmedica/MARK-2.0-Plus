@@ -31,7 +31,7 @@ class TestOutputReaderIntegration(unittest.TestCase):
     # === SCAN_OUTPUT_TREE Tests ===
 
     def test_scan_output_tree_empty_directory(self):
-        """TC1: Empty output directory → returns empty tree."""
+        """(IT-CR2-09) TC1: Empty output directory → returns empty tree."""
         # Act
         tree = self.reader.scan_output_tree()
 
