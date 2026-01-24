@@ -4,7 +4,7 @@
 
 This project is a fork of the original **MARK 2.0** tool, developed as part of the *Master's Degree in Computer Science* at the **University of Salerno**, for the course **Ingegneria del Software Tecniche Avanzate  (Advanced Software Engineering Techniques)**.
 
-🔍 **MARK 2.0** is a static analysis tool that automatically classifies Machine Learning (ML) projects based on whether they:
+ℹ️ **MARK 2.0** is a static analysis tool that automatically classifies Machine Learning (ML) projects based on whether they:
 
 - **Produce models** (PRODUCER)  
 - **Use models** (CONSUMER)  
@@ -13,7 +13,7 @@ using heuristic rules and source code inspection.
 
 ---
 
-## ✨ What's New in MARK 2.0 Plus
+## ✨ What's new in MARK 2.0 Plus
 
 This fork extends the original MARK 2.0 with **three main features**:
 
