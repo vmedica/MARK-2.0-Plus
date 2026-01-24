@@ -27,7 +27,7 @@ class TestPipelineServiceUnit(unittest.TestCase):
     @patch("gui.services.pipeline_service.RepoInspector")
     @patch("gui.services.pipeline_service.RepoCloner")
     def test_cloning_with_check(self, mock_cloner_class, mock_inspector_class):
-        """Test case 1: Cloning + cloner check enabled, analysis disabled."""
+        """(UT-CR2-01) Test case 1: Cloning + cloner check enabled, analysis disabled."""
         # Arrange
         config = PipelineConfig(
             io_path=self.io_path,
@@ -79,7 +79,7 @@ class TestPipelineServiceUnit(unittest.TestCase):
 
     @patch("gui.services.pipeline_service.MLAnalysisFacade")
     def test_all_analysis_enabled_no_cloning(self, mock_facade_class):
-        """Test case 2: All analysis enabled (producer, consumer, metrics), no cloning."""
+        """(UT-CR2-02) Test case 2: All analysis enabled (producer, consumer, metrics), no cloning."""
         # Arrange
         config = PipelineConfig(
             io_path=self.io_path,
@@ -138,7 +138,7 @@ class TestPipelineServiceUnit(unittest.TestCase):
 
     @patch("gui.services.pipeline_service.RepoCloner")
     def test_invalid_csv_path(self, mock_cloner_class):
-        """Test case 3: Invalid CSV path - should handle error gracefully."""
+        """(UT-CR2-03) Test case 3: Invalid CSV path - should handle error gracefully."""
         # Arrange
         invalid_csv = Path("/fake/nonexistent.csv")
 

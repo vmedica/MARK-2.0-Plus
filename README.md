@@ -1,63 +1,173 @@
-# MARK 2.0: Architectural Refactoring of a Classification Tool for Machine Learning Projects
+# 🔍 MARK 2.0 Plus
 
-**MARK 2.0** is an engineering refactoring of MARK: the tool automatically classifies Machine Learning (ML) projects 
-based on their behavior with respect to model production and/or use, using heuristic rules and static analysis of source code.
-The goal of this release is to improve readability, maintainability, and extensibility without altering the classification logic.
+> **Fork of MARK 2.0** — Extended with GUI, Code Metrics, and Dashboard features.
 
-## CONTENT
-**/modules**  All the modules that make up the tool:
-- **analyzer**: contains all the classification logic, from classifier selection to its construction and use
-- **cloner**: for cloning projects from Git
-- **keyword_extractor**: contains the keyword extraction logic (Strategy Pattern)
-- **library_manager**: contains all the scripts needed for managing libraries
-- **scanner**: a tool that filters the files to be analyzed
-- **utils**: contains the logger
-- **oracle**: Tools for comparing results with oracle files.
+This project is a fork of the original **MARK 2.0** tool, developed as part of the *Master's Degree in Computer Science* at the **University of Salerno**, for the course **Ingegneria del Software Tecniche Avanzate  (Advanced Software Engineering Techniques)**.
 
-## INSTALLATION
+ℹ️ **MARK 2.0** is a static analysis tool that automatically classifies Machine Learning (ML) projects based on whether they:
+
+- **Produce models** (PRODUCER)  
+- **Use models** (CONSUMER)  
+
+using heuristic rules and source code inspection.
+
+---
+
+## ✨ What's new in MARK 2.0 Plus
+
+This fork extends the original MARK 2.0 with **three main features**:
+
+### 📊 1. Code Quality Metrics (Radon)
+Integration of:
+- **Cyclomatic Complexity (CC)**
+- **Maintainability Index (MI)**
+
+using **Radon**.
+
+Metrics are calculated on analyzed source files and then **aggregated at project level**, enabling:
+- comparison between repositories
+- quality monitoring across datasets
+
+---
+
+### 🖥️ 2. GUI for Configuration and Execution
+A **Tkinter-based GUI** (`mark_gui.py`) that allows users to:
+
+- 📁 Select input sources (local folder or CSV for repository cloning)  
+- ⚙️ Configure analysis parameters (step, rules, metrics toggle)  
+- ▶️ Run analysis via a simple **Run** button  
+- 👀 View results directly in the interface  
+
+---
+
+### 📈 3. Integrated Reporting Dashboard
+A **Dashboard** section in the GUI with interactive charts (matplotlib):
+
+- **Analysis Overview:**  count and percentage of Producer/Consumer classifications  
+- **Code Quality Overview:** average CC and MI metrics  
+- **Top ML Keywords:** most detected ML keywords across analyzed projects  
+
+---
+
+## 📚 Documentation
+
+Additional documentation is available in the **`ISTA_DOCS/`** folder.
+
+---
+
+## 📂Main structure of the project 
+
+### `/modules` — Core of the tool
+- **analyzer** → classification logic (Facade + Factory + Builder)
+- **cloner** → Git repository cloning
+- **keyword_extractor** → keyword extraction (Strategy Pattern)
+- **library_manager** → library management scripts
+- **scanner** → filters the files to be analyzed
+- **utils** → logging utilities
+- **oracle** → result comparison with oracle files
+
+### `/gui`
+- GUI components (views, services, controller)
+
+---
+
+## 🛠️ Installation
+
 Install the required dependencies:
-```sh
-    pip install -r requirements.txt
-```
-
-Optional development tools (to replicate the quantitative evaluation):
-```sh
-    pip install -r dev-requirements.txt
-```
-After installation, create the JSON files for calculating the metrics:
-```sh
-   radon mi -s -j .\modules | Out-File -Encoding utf8 mi.json
-   radon cc -s -j .\modules | Out-File -Encoding utf8 cc.json
-```
-Run the script to get the results:
-```sh
-   python calcola_voto.py
-```
-
-## CONFIGURATION
-- **AnalyzerRole**: Select the analysis role (producer/consumer).
-- **LibraryDictType**: Select the library dictionary for the role.
-- **FileFilters**: Include/exclude files (e.g., exclude tests/examples for consumer rule 4).
-- **KeywordExtractionStrategy**: Keyword extraction strategy (default: regex).
-- **Input/output path**: Passed as parameters (not hard-coded).
-
-The AnalyzerBuilder centralizes these choices and produces a ready-to-use analyzer.
-
-## USAGE 
-The configurations are in main.py.
-1. **Repository Cloning**: The RepoCloner receives an integer N and clones the first N repositories from the configured source.
-2. **Analysis (Classification)**: The Facade instantiates the correct analyzer based on the role (AnalyzerRole) and configuration (LibraryDictType), via Factory → Builder.
-3. **Aggregation and Reporting**: Concludes with Merger and ResultAnalysis.
-
-**Supported roles**: PRODUCER, CONSUMER
 
 ```sh
-    python main.py
+pip install -r requirements.txt
 ```
-**Note**: In MARK 2.0, phases are modular and parameterizable; partially starting a single phase may require a minor modification to main.py (e.g., enabling/disabling steps).
+> Includes runtime dependencies: pandas, GitPython, ttkbootstrap, matplotlib.
 
-## OUTPUT
-- CSV/JSON with projects classified by role.
-- Merger reports with metrics (accuracy, precision, recall, F1) compared to the oracle.
-- Persistent logs in logs/ for each execution.
+Optional development tools:
+```sh
+pip install -r dev-requirements.txt
+```
+> Includes linting (pylint, flake8), metrics (radon), and testing (pytest, pytest-cov).
 
+---
+## ▶️ Usage
+
+MARK 2.0 Plus can be used in **two ways**:
+
+- 🧾 **Command-Line** → `main.py`  
+- 🖥️ **GUI** → `mark_gui.py`
+
+---
+
+### 🧾 Command-Line Mode
+
+The main configurations are defined in `main.py`.
+
+#### 🔄 Workflow
+
+1. **Repository Cloning**  
+   The *RepoCloner* receives an integer **N** and clones the first **N** repositories  
+   from the configured source.
+
+2. **Analysis (Classification)**  
+   The *Facade* instantiates the correct analyzer based on:
+   - **AnalyzerRole**
+   - **LibraryDictType**  
+   using **Factory → Builder**.
+
+3. **Aggregation and Reporting**  
+   Final phase using **Merger** and **ResultAnalysis**.
+
+---
+
+#### 🎭 Supported Roles
+- `PRODUCER`
+- `CONSUMER`
+- `METRICS`
+
+---
+
+#### ▶️ Run from terminal
+
+```sh
+python main.py
+```
+> ⚠️ **Note**  
+> In MARK 2.0, phases are modular and parameterizable.  
+> Partially starting a single phase may require a minor modification to `main.py`  
+> (e.g., enabling/disabling steps).
+
+📄 For advanced CLI options, see:  
+**`GUIDA main_args.md`** (with `main_args.py`)
+
+---
+
+### 🖥️ GUI Mode
+
+Run the graphical interface for an intuitive, guided workflow:
+
+```sh
+python mark_gui.py
+```
+
+---
+## ⚙️ Configuration
+
+Available configuration options:
+
+- **AnalyzerRole** → select the analysis role (**Producer / Consumer**)
+- **LibraryDictType** → select the library dictionary for the selected role
+- **FileFilters** → include / exclude files (e.g. tests, examples)
+- **KeywordExtractionStrategy** → keyword extraction logic (default: `regex`)
+- **Enable Metrics** → toggle code quality metrics calculation (**CC & MI**)
+
+👉 The GUI provides an intuitive way to set all these options  
+**without editing any code**.
+
+---
+
+## 📤 Output
+
+MARK 2.0 Plus generates:
+
+- CSV with projects classified by role  
+- CSV with code quality metrics (**CC**, **MI**)  
+- Dashboard visualizations for aggregated analysis  
+- Persistent logs in `logs/` for each execution
